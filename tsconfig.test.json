@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": ".tmp/test",
+    "allowJs": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "test/fixtures/*.mjs"]
+}

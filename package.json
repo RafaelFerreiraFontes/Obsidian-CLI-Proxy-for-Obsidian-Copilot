@@ -1,0 +1,30 @@
+{
+  "name": "obsidian-cli-proxy",
+  "version": "1.0.0",
+  "description": "OpenAI-compatible local CLI proxy for Obsidian Copilot",
+  "private": true,
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "tsc -p tsconfig.test.json && node --test .tmp/test/test/*.test.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "type": "module",
+  "dependencies": {
+    "@fastify/cors": "^11.3.1",
+    "fastify": "^5.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}
