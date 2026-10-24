@@ -26,6 +26,8 @@ export async function buildServer(options: Partial<RouteOptions> & { logger?: bo
     providers: options.providers ?? { codex: new CodexRunner(), agy: new AgyRunner() },
     modelIds: options.modelIds ?? (process.env.PROXY_MODELS ?? '').split(',').map(id => id.trim()).filter(Boolean),
     timeoutMs: options.timeoutMs ?? positiveInteger(process.env.CLI_TIMEOUT_MS, 120_000, 'CLI_TIMEOUT_MS'),
+    approvalTimeoutMs: options.approvalTimeoutMs ?? positiveInteger(process.env.APPROVAL_TIMEOUT_MS, 300_000, 'APPROVAL_TIMEOUT_MS'),
+    ...(options.modelCacheTtlMs === undefined ? {} : { modelCacheTtlMs: options.modelCacheTtlMs }),
   });
   return app;
 }

@@ -8,7 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "tsc -p tsconfig.test.json && node --test .tmp/test/test/*.test.js",
+    "test": "npm run build && tsc -p tsconfig.test.json && node --test .tmp/test/test/*.test.js",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"

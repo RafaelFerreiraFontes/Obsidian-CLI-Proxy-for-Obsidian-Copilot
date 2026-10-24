@@ -1,0 +1,12 @@
+{
+  "obsidian-cli-proxy-approval": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "node dist/approval-hook.js", "timeout": 600 }
+        ]
+      }
+    ]
+  }
+}

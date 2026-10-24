@@ -1,5 +1,10 @@
 import { ProxyError } from '../types.js';
 import { SpawnRunner, type Command, type OutputDecoder, type RunOptions } from './base.js';
+import { createAgyApprovalBridge } from './agy-approval-bridge.js';
+import { parseAgyModels } from '../models.js';
+import { modelError } from '../utils/model-error.js';
+import { access, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export class AgyDecoder implements OutputDecoder {
   private pending = '';
@@ -27,7 +32,8 @@ export class AgyDecoder implements OutputDecoder {
       this.receivedResult = true;
       const result = event.result;
       if (result?.status !== 'SUCCESS') {
-        throw new ProxyError(`Antigravity failed (${result?.status ?? 'unknown'}): ${typeof result?.error === 'string' ? result.error : JSON.stringify(result?.error ?? 'No diagnostic output.')}`);
+        const message = `Antigravity failed (${result?.status ?? 'unknown'}): ${typeof result?.error === 'string' ? result.error : JSON.stringify(result?.error ?? 'No diagnostic output.')}`;
+        throw modelError(message) ?? new ProxyError(message);
       }
       // Some versions emit only the final response. Never duplicate streamed deltas.
       if (!this.emitted && typeof result.response === 'string') {
@@ -47,6 +53,34 @@ export class AgyDecoder implements OutputDecoder {
 }
 
 export class AgyRunner extends SpawnRunner {
+  private bridgeEnv: NodeJS.ProcessEnv | undefined;
+
+  async listModels(signal: AbortSignal): Promise<string[]> {
+    class Discovery extends SpawnRunner {
+      protected command(): Command { return { executable: this.config.executable ?? process.env.AGY_BIN ?? (process.platform === 'win32' ? 'agy.exe' : 'agy'), args: ['models'], input: '' }; }
+    }
+    let text = '';
+    for await (const part of new Discovery({ ...this.config, maxOutputBytes: 1024 * 1024 }).run({ model: 'default', prompt: '', signal })) text += part;
+    return parseAgyModels(text);
+  }
+
+  override async *run(options: RunOptions): AsyncGenerator<string> {
+    if (!options.onApproval) { yield* super.run(options); return; }
+    // Use a per-invocation runner: shared provider instances serve concurrent requests.
+    const hooks = JSON.parse(await readFile(join(this.config.cwd ?? process.cwd(), '.agents', 'hooks.json'), 'utf8').catch(() => '{}'));
+    const entry = hooks['obsidian-cli-proxy-approval'];
+    const gate = entry?.PreToolUse?.some((rule: { matcher?: string; hooks?: Array<{ command?: string; type?: string }> }) => rule.matcher === '.*' && rule.hooks?.some(hook => hook.type === 'command' && hook.command === 'node dist/approval-hook.js'));
+    if (!gate || entry.enabled === false) throw new ProxyError('Antigravity approval hook is missing. Start the proxy in its project root, containing .agents/hooks.json, and run npm run build.', 503, 'approval_hook_missing');
+    await access(join(this.config.cwd ?? process.cwd(), 'dist', 'approval-hook.js')).catch(() => { throw new ProxyError('Build the Antigravity approval hook first with npm run build.', 503, 'approval_hook_missing'); });
+    const bridge = await createAgyApprovalBridge(options);
+    const runner = new AgyRunner(this.config);
+    runner.bridgeEnv = bridge.env;
+    try { yield* runner.runWithBridge(options); }
+    finally { await bridge.close(); }
+  }
+
+  private async *runWithBridge(options: RunOptions) { yield* super.run(options); }
+
   protected override errorFromStderr(stderr: string): ProxyError | undefined {
     if (/Authentication required|silent auth failed|Please sign in to view available models/i.test(stderr)) {
       return new ProxyError('Antigravity authentication is unavailable. Run agy interactively in your terminal to sign in, then restart the proxy with the same OS account and credential environment.', 502, 'cli_authentication_error');
@@ -62,6 +96,7 @@ export class AgyRunner extends SpawnRunner {
       args,
       input: JSON.stringify({ event: 'user', message: { content: options.prompt } }) + '\n',
       decoder: new AgyDecoder(),
+      ...(this.bridgeEnv ? { env: this.bridgeEnv } : {}),
     };
   }
 }

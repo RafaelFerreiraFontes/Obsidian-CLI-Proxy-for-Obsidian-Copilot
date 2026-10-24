@@ -1,15 +1,27 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { ProxyError } from '../types.js';
 import { AnsiFilter } from '../utils/ansi.js';
+import { modelError } from '../utils/model-error.js';
+import type { OpenAITool, ToolCall } from '../types.js';
+
+export interface ApprovalRequest {
+  action: string;
+  cwd?: string;
+  reason?: string;
+}
 
 export interface RunOptions {
   model: string;
   prompt: string;
   signal: AbortSignal;
+  tools?: OpenAITool[];
+  onApproval?: (request: ApprovalRequest) => Promise<boolean>;
+  onToolCall?: (call: ToolCall) => Promise<string>;
 }
 
 export interface CliRunner {
   run(options: RunOptions): AsyncIterable<string>;
+  listModels?(signal: AbortSignal): Promise<string[]>;
 }
 
 export interface OutputDecoder {
@@ -22,6 +34,7 @@ export interface Command {
   args: string[];
   input: string;
   decoder?: OutputDecoder;
+  env?: NodeJS.ProcessEnv;
 }
 
 export interface RunnerConfig {
@@ -61,7 +74,7 @@ export abstract class SpawnRunner implements CliRunner {
       windowsHide: true,
       detached: process.platform !== 'win32',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0', TERM: 'dumb' },
+      env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0', TERM: 'dumb', ...command.env },
     });
     const outcome = new Promise<{ code: number | null; signal?: string; error?: Error }>(resolve => {
       child.once('error', error => resolve({ code: null, error }));
@@ -88,6 +101,7 @@ export abstract class SpawnRunner implements CliRunner {
     const stdoutFilter = new AnsiFilter();
     const responseFilter = new AnsiFilter();
     let outputBytes = 0;
+    let stdoutTail = '';
     const checkSize = (text: string) => {
       outputBytes += Buffer.byteLength(text);
       if (outputBytes > (this.config.maxOutputBytes ?? 8 * 1024 * 1024)) {
@@ -99,6 +113,7 @@ export abstract class SpawnRunner implements CliRunner {
       for await (const raw of child.stdout) {
         options.signal.throwIfAborted();
         const text = stdoutFilter.push(String(raw));
+        stdoutTail = (stdoutTail + text).slice(-16384);
         checkSize(text);
         for (const part of command.decoder?.push(text) ?? [text]) {
           const clean = responseFilter.push(part);
@@ -108,6 +123,8 @@ export abstract class SpawnRunner implements CliRunner {
       const result = await outcome;
       options.signal.throwIfAborted();
       if (diagnosticError) throw diagnosticError;
+      const rejectedModel = modelError(`${stderr}\n${result.code !== 0 ? stdoutTail : ''}`);
+      if (rejectedModel) throw rejectedModel;
       if (result.error) {
         const missing = (result.error as NodeJS.ErrnoException).code === 'ENOENT';
         throw new ProxyError(`Cannot start ${command.executable}: ${result.error.message}`, missing ? 503 : 502, missing ? 'cli_not_found' : 'cli_error');
@@ -122,6 +139,8 @@ export abstract class SpawnRunner implements CliRunner {
       finished = true;
     } catch (cause) {
       if (diagnosticError) throw diagnosticError;
+      const rejectedModel = modelError(`${stderr}\n${stdoutTail}`);
+      if (rejectedModel) throw rejectedModel;
       const reason: unknown = options.signal.reason;
       if (reason instanceof ProxyError && reason.code === 'cli_timeout' && stderr.trim()) {
         throw new ProxyError(`${reason.message}\nCLI diagnostics: ${stderr.trim().slice(-4000)}`, reason.statusCode, reason.code);

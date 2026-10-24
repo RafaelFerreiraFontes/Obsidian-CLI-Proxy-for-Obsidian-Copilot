@@ -9,6 +9,7 @@ import { buildServer } from '../src/index.js';
 import { CodexRunner } from '../src/providers/codex-runner.js';
 import { AgyRunner, AgyDecoder } from '../src/providers/agy-runner.js';
 import { formatPrompt } from '../src/utils/prompt-formatter.js';
+import { CODEX_MODELS } from '../src/models.js';
 
 const fixture = fileURLToPath(new URL('./fixtures/cli.mjs', import.meta.url));
 const config = { executable: process.execPath, prefixArgs: [fixture] };
@@ -21,7 +22,8 @@ test('models, health and Obsidian CORS preflight', async t => {
   const models = await app.inject({ url: '/v1/models', headers: { origin: 'app://obsidian.md' } });
   assert.equal(models.statusCode, 200);
   assert.equal(models.headers['access-control-allow-origin'], '*');
-  assert.deepEqual(models.json().data.map((m: { id: string }) => m.id), ['codex/default', 'agy/default', 'agy/example']);
+  const ids = models.json().data.map((m: { id: string }) => m.id);
+  for (const id of ['codex/default', 'agy/default', 'agy/example', ...CODEX_MODELS.map(id => `codex/${id}`), 'agy/gemini-4-argon-high']) assert.ok(ids.includes(id));
   const preflight = await app.inject({ method: 'OPTIONS', url: '/v1/chat/completions', headers: {
     origin: 'app://obsidian.md', 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization,content-type,x-stainless-runtime',
   } });
