@@ -218,6 +218,8 @@ test('approval bridge denies malformed or unauthenticated payloads and binds the
   assert.equal((await fetch(url, { method: 'POST', body: '{}' })).status, 403);
   assert.deepEqual(await (await fetch(url, { method: 'POST', headers: auth, body: '{"toolCall":{"name":"x","args":[]}}' })).json(), { approved: false });
   assert.deepEqual(await (await fetch(url, { method: 'POST', headers: auth, body: '{"toolCall":{"name":"run_command","args":{"Cwd":"untrusted"}}}' })).json(), { approved: false });
+  assert.equal(calls, 0, 'An unvalidated path must not fall back to the authorized workspace.');
+  assert.deepEqual(await (await fetch(url, { method: 'POST', headers: auth, body: JSON.stringify({ workspacePaths: [first], toolCall: { name: 'run_command', args: { Cwd: first, CommandLine: 'echo fixture' } } }) })).json(), { approved: false });
   assert.equal(calls, 1);
 });
 

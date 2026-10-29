@@ -1,5 +1,7 @@
 # Relatório de implementação — 2026-10-28
 
+> Relatório histórico do estado publicado em review/agy-proxy-local-state. A correção posterior de registro consentido de workspaces externos está em [AGY_INTEGRATION_REPORT.md](AGY_INTEGRATION_REPORT.md). Os bloqueios e a ausência de commits descritos abaixo referem-se à entrega original, não ao estado atual.
+
 ## Git e escopo
 
 - Raiz: `C:/Users/fedet/OneDrive/Documentos/Web Projects/obsidian-cli-proxy`.

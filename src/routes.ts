@@ -92,7 +92,7 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
   app.get('/v1/capabilities', async request => ({
     authentication: 'required', configured_workspaces: authenticate(options.config, request.headers.authorization ?? '').client.workspaces,
     providers: { codex: { transport: 'app-server', client_tools: true, model_fallback: false, session_mode: 'ephemeral', authentication_verified: false },
-      agy: { transport: 'stream-json', client_tools: false, isolated_hook_injection: false, authentication_verified: false } },
+      agy: { transport: 'stream-json', client_tools: false, external_workspaces: false, external_workspace_blocker: 'native_hook_loading_unverified', workspace_registration: 'operator-consent', hook_integrity: 'sha256-and-file-identity', startup_attestation_verified: false, isolated_hook_injection: false, authentication_verified: false } },
     profiles: Object.fromEntries(Object.entries(options.config.profiles).filter(([id]) => authenticate(options.config, request.headers.authorization ?? '').client.profiles.includes(id)).map(([id, p]) => [id, { provider: p.provider, policy: p.policy, tools: p.tools, models: p.models }])),
   }));
   if (options.config.diagnostics) app.get('/v1/diagnostics', async () => ({

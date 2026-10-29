@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { mkdtemp, mkdir, rm, readdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { HookCredentialLease, readHookCredentials } from '../src/hook-credentials.js';
+import { readConfig, executionContext, authenticate } from '../src/config.js';
+import { TEST_KEY } from './helpers.js';
+
+test('hook credentials bind native conversation IDs and workspaces and expire on cleanup', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'agy-leases-')); t.after(() => rm(root, { recursive: true, force: true }));
+  const first = join(root, 'first'); const second = join(root, 'second'); const privateDirectory = join(root, 'private');
+  await mkdir(first); await mkdir(second);
+  const config = readConfig({ PROXY_API_KEY: TEST_KEY, PROXY_WORKSPACES: JSON.stringify({ first, second }) });
+  const auth = authenticate(config, `Bearer ${TEST_KEY}`);
+  const context1 = executionContext(config, auth, 'first', 'agy', 'agy/default');
+  const context2 = executionContext(config, auth, 'second', 'agy', 'agy/default');
+  const id1 = '11111111-1111-4111-8111-111111111111'; const id2 = '22222222-2222-4222-8222-222222222222';
+  const credentials1 = { url: 'http://127.0.0.1:1/approve', token: 'fixture-session-one' };
+  const credentials2 = { url: 'http://127.0.0.1:2/approve', token: 'fixture-session-two' };
+  const lease1 = new HookCredentialLease(context1, credentials1, privateDirectory);
+  const lease2 = new HookCredentialLease(context2, credentials2, privateDirectory);
+  await Promise.all([lease1.register(id1, first), lease2.register(id2, second)]);
+  assert.equal((await readdir(privateDirectory)).length, 2);
+  assert.deepEqual(await readHookCredentials({ conversationId: id1, workspacePaths: [first] }, privateDirectory), credentials1);
+  assert.deepEqual(await readHookCredentials({ conversationId: id2, workspacePaths: [second] }, privateDirectory), credentials2);
+  await assert.rejects(readHookCredentials({ conversationId: id1, workspacePaths: [second] }, privateDirectory), /context/);
+  await assert.rejects(readHookCredentials({ conversationId: '../escape', workspacePaths: [first] }, privateDirectory), /context/);
+  await assert.rejects(lease1.register(id2, first), /changed its conversation/);
+  await assert.rejects(new HookCredentialLease(context1, credentials1, join(first, 'private')).register(id1, first), /outside/);
+  assert.deepEqual(await readdir(first), []); assert.deepEqual(await readdir(second), []);
+  await lease1.close(); await lease2.close();
+  assert.deepEqual(await readdir(privateDirectory), []);
+});
