@@ -56,5 +56,8 @@ export class ProxyError extends Error {
 }
 
 export function errorBody(error: Error, code = 'cli_error') {
-  return { error: { message: error.message, type: ['invalid_request_error', 'model_not_found'].includes(code) ? 'invalid_request_error' : 'server_error', param: code === 'model_not_found' ? 'model' : null, code } };
+  const type = code === 'authentication_error' ? 'authentication_error' : code === 'rate_limit' ? 'rate_limit_error'
+    : /not_authorized$/.test(code) ? 'permission_error'
+    : ['invalid_request_error', 'model_not_found', 'workspace_not_found', 'tool_not_supported', 'session_conflict'].includes(code) ? 'invalid_request_error' : 'server_error';
+  return { error: { message: error.message, type, param: ['model_not_found', 'model_not_authorized'].includes(code) ? 'model' : null, code } };
 }

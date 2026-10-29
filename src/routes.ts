@@ -6,8 +6,11 @@ import { ProxyError, errorBody, type ChatCompletionChunk, type ChatCompletionReq
 import { ModelCatalog } from './models.js';
 import { SessionManager, type AgentSession } from './sessions.js';
 import type { ToolCall } from './types.js';
+import { authenticate, executionContext, type Config } from './config.js';
+import { canonicalModel } from './models.js';
 
 export interface RouteOptions {
+  config: Config;
   providers: Record<'codex' | 'agy', CliRunner>;
   modelIds?: string[];
   timeoutMs?: number;
@@ -77,7 +80,7 @@ async function write(response: ServerResponse, data: string): Promise<void> {
 
 export function registerRoutes(app: FastifyInstance, options: RouteOptions): void {
   const active = new Set<AbortController>();
-  const sessions = new SessionManager(options.timeoutMs, options.approvalTimeoutMs);
+  const sessions = new SessionManager(options.timeoutMs, options.approvalTimeoutMs, options.config.maxSessions);
   const catalog = new ModelCatalog(options.providers.agy, options.modelIds, options.modelCacheTtlMs);
   app.addHook('preClose', async () => {
     for (const controller of active) controller.abort(new ProxyError('Server is shutting down.', 503, 'server_shutdown'));
@@ -86,6 +89,16 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
   });
   const created = Math.floor(Date.now() / 1000);
   app.get('/health', async () => ({ status: 'ok', active_requests: active.size, active_sessions: sessions.size }));
+  app.get('/v1/capabilities', async request => ({
+    authentication: 'required', configured_workspaces: authenticate(options.config, request.headers.authorization ?? '').client.workspaces,
+    providers: { codex: { transport: 'app-server', client_tools: true, model_fallback: false, session_mode: 'ephemeral', authentication_verified: false },
+      agy: { transport: 'stream-json', client_tools: false, isolated_hook_injection: false, authentication_verified: false } },
+    profiles: Object.fromEntries(Object.entries(options.config.profiles).filter(([id]) => authenticate(options.config, request.headers.authorization ?? '').client.profiles.includes(id)).map(([id, p]) => [id, { provider: p.provider, policy: p.policy, tools: p.tools, models: p.models }])),
+  }));
+  if (options.config.diagnostics) app.get('/v1/diagnostics', async () => ({
+    // --help is a bounded availability probe; it does not validate credentials or models.
+    providers: Object.fromEntries(await Promise.all(Object.entries(options.providers).map(async ([id, runner]) => [id, { ...(await runner.diagnose?.() ?? { available: null }), authentication_verified: false }]))),
+  }));
   app.get('/v1/models', async () => {
     const models: Model[] = (await catalog.list()).map(id => ({ id, object: 'model', created, owned_by: id.split('/')[0]! }));
     return { object: 'list', data: models };
@@ -93,10 +106,22 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
 
   app.post<{ Body: ChatCompletionRequest }>('/v1/chat/completions', { schema: { body: bodySchema } }, async (request, reply) => {
     const body = request.body;
+    const auth = authenticate(options.config, request.headers.authorization ?? '');
+    const header = (name: string, fallback: string) => {
+      const value = request.headers[name];
+      if (value !== undefined && typeof value !== 'string') throw new ProxyError('Invalid proxy selection header.', 400, 'invalid_request_error');
+      return value ?? fallback;
+    };
+    const context = executionContext(options.config, auth, header('x-proxy-workspace', options.config.defaultWorkspace), header('x-proxy-profile', body.model.split('/')[0]!), canonicalModel(body.model));
+    if (body.tools?.length && (context.profile.tools === 'none' || context.profile.provider === 'agy')) throw new ProxyError('This profile/provider cannot bridge client tools. Use Codex dynamic tools.', 400, 'tool_not_supported');
+    if (new Set(body.tools?.map(t => t.function.name)).size !== (body.tools?.length ?? 0)) throw new ProxyError('Tool names must be unique.', 400, 'invalid_request_error');
     const slash = body.model.indexOf('/');
     const provider = options.providers[body.model.slice(0, slash) as 'codex' | 'agy'];
     const controller = new AbortController();
     let session: AgentSession | undefined;
+    const started = Date.now();
+    let outcome = 'completed';
+    let errorCode: string | undefined;
     controller.signal.addEventListener('abort', () => session?.cancel(controller.signal.reason as Error), { once: true });
     active.add(controller);
     const disconnect = () => controller.abort(new ProxyError('Client disconnected.', 499, 'client_disconnected'));
@@ -115,7 +140,7 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
     const send = (data: unknown) => write(reply.raw, `data: ${JSON.stringify(data)}\n\n`);
     try {
       controller.signal.throwIfAborted();
-      session = sessions.acquire(body, provider, request.headers.authorization ?? '');
+      session = sessions.acquire(body, provider, auth.identity, context);
       if (body.stream) {
         reply.hijack();
         for (const [name, value] of Object.entries(reply.getHeaders())) {
@@ -141,13 +166,14 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
         if (event.type === 'error') throw event.error;
         if (event.type === 'end') break;
         if (event.type === 'tool') {
+          outcome = event.call.function.name === 'proxy_approve_action' ? 'awaiting_approval' : 'awaiting_tool';
           toolCalls = [event.call];
           if (body.stream) await send(chunk({ tool_calls: [{ ...event.call, index: 0 }] }));
           break;
         }
         if (body.stream) await send(chunk({ content: event.text }));
         else content += event.text;
-        if (event.type === 'approval') break;
+        if (event.type === 'approval') { outcome = 'awaiting_approval'; break; }
       }
       controller.signal.throwIfAborted();
       if (body.stream) {
@@ -161,6 +187,8 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
       const error = cause instanceof Error ? cause : new Error(String(cause));
       session?.cancel(error);
       const code = error instanceof ProxyError ? error.code : 'cli_error';
+      outcome = code;
+      errorCode = code;
       if (reply.raw.destroyed) return;
       if (reply.raw.headersSent) {
         try {
@@ -172,6 +200,7 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
         return reply.code(error instanceof ProxyError ? error.statusCode : 502).send(errorBody(error, code));
       }
     } finally {
+      request.log.info({ requestId: request.id, sessionId: session?.id, provider: context.profile.provider, modelId: body.model, workspaceId: context.workspaceId, durationMs: Date.now() - started, outcome, errorCode }, 'CLI request finished');
       if (session) session.busy = false;
       if (heartbeat) clearInterval(heartbeat);
       request.raw.off('aborted', disconnect);

@@ -13,6 +13,7 @@ export class CodexRunner extends SpawnRunner {
     if (options.model !== 'default') args.push('--model', options.model);
     args.push('-');
     return {
+      provider: 'codex',
       executable: this.config.executable ?? process.env.CODEX_BIN ?? 'codex',
       args,
       input: options.prompt,

@@ -4,6 +4,10 @@ async function main() {
     const url = process.env.CLI_PROXY_HOOK_URL;
     const token = process.env.CLI_PROXY_HOOK_TOKEN;
     if (!url || !token) throw new Error('Approval bridge unavailable');
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' || parsed.hostname !== '127.0.0.1' || parsed.pathname !== '/approve' || parsed.username || parsed.password || parsed.search || parsed.hash) throw new Error('Invalid bridge URL');
+    const timeout = Number(process.env.CLI_PROXY_APPROVAL_TIMEOUT_MS ?? 300_000);
+    if (!Number.isSafeInteger(timeout) || timeout <= 0 || timeout > 580_000) throw new Error('Invalid timeout');
     let input = '';
     for await (const chunk of process.stdin) {
       input += chunk.toString();
@@ -11,7 +15,7 @@ async function main() {
     }
     const response = await fetch(url, {
       method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: input, signal: AbortSignal.timeout(590_000),
+      body: input, signal: AbortSignal.timeout(timeout + 5000), redirect: 'error',
     });
     if (!response.ok) throw new Error('Approval bridge unavailable');
     const result = await response.json() as { approved?: boolean };

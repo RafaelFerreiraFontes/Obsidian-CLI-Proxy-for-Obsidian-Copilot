@@ -5,19 +5,30 @@ import { killProcessTree, type RunOptions, type RunnerConfig } from './base.js';
 import { AsyncQueue } from '../utils/async-queue.js';
 import { AnsiFilter } from '../utils/ansi.js';
 import { modelError } from '../utils/model-error.js';
+import { cliEnvironment, validateExecution } from '../config.js';
+import { authenticationError } from '../utils/cli-error.js';
 
 type Event = { type: 'message'; value: Record<string, any> } | { type: 'error'; error: Error } | { type: 'closed'; code: number | null };
 
 // One app-server per active agent turn. Its JSON-RPC request remains pending across chat replies.
 export async function* runCodexAppServer(options: RunOptions, config: RunnerConfig): AsyncGenerator<string> {
   options.signal.throwIfAborted();
-  const executable = config.executable ?? process.env.CODEX_BIN ?? 'codex';
+  if (options.context) validateExecution(options.context);
+  const cwd = options.context?.workingDirectory ?? config.cwd;
+  if (!cwd) throw new ProxyError('An explicit authorized workspace is required.', 403, 'workspace_not_authorized');
+  const policy = options.context?.profile.policy ?? 'read-only';
+  const executable = options.context?.profile.executable ?? config.executable ?? process.env.CODEX_BIN ?? 'codex';
   const child = spawn(executable, [...(config.prefixArgs ?? []), 'app-server', '--listen', 'stdio://'], {
-    cwd: config.cwd ?? process.cwd(), shell: false, windowsHide: true,
+    cwd, shell: false, windowsHide: true,
     detached: process.platform !== 'win32', stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0', TERM: 'dumb' },
+    env: cliEnvironment('codex'),
   });
   const events = new AsyncQueue<Event>();
+  const startup = setTimeout(() => {
+    events.push({ type: 'error', error: new ProxyError('Codex initialization timed out.', 504, 'cli_timeout') });
+    killProcessTree(child);
+  }, options.context?.profile.startupTimeoutMs ?? 30_000);
+  startup.unref();
   const closed = new Promise<void>(resolve => {
     child.once('close', code => { events.push({ type: 'closed', code }); resolve(); });
     child.once('error', error => { events.push({ type: 'error', error }); resolve(); });
@@ -32,13 +43,18 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
   child.stderr.setEncoding('utf8');
   child.stderr.on('data', (text: string) => { stderr = (stderr + ansi.push(text)).slice(-16384); });
   child.stdin.on('error', () => {});
+  let outputExceeded = false;
+  child.stdout.on('data', (data: Buffer) => {
+    bytes += data.length;
+    if (!outputExceeded && bytes > (options.context?.profile.maxOutputBytes ?? config.maxOutputBytes ?? 8 * 1024 * 1024)) {
+      outputExceeded = true;
+      events.push({ type: 'error', error: new ProxyError('Codex output exceeded the configured limit.', 502, 'output_limit') });
+      killProcessTree(child);
+    }
+  });
   const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
   lines.on('line', line => {
-    bytes += Buffer.byteLength(line);
-    if (bytes > (config.maxOutputBytes ?? 8 * 1024 * 1024)) {
-      events.push({ type: 'error', error: new ProxyError('Codex output exceeded the configured limit.', 502, 'output_limit') });
-      killProcessTree(child); return;
-    }
+    if (outputExceeded) return;
     try {
       const value = JSON.parse(line);
       if (!value || typeof value !== 'object') throw new Error();
@@ -61,26 +77,27 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
       }
       if (event.type === 'closed') {
         const message = stderr.trim().slice(-4000) || `Codex app-server exited with code ${event.code} before completing the turn.`;
-        throw modelError(message) ?? new ProxyError(message);
+        throw authenticationError(message) ?? modelError(message) ?? new ProxyError(message);
       }
       const message = event.value;
       if (message.error) {
         const text = String(message.error.message ?? JSON.stringify(message.error));
-        throw modelError(text) ?? new ProxyError(text);
+        throw authenticationError(text) ?? modelError(text) ?? new ProxyError(text);
       }
       if (message.id === 1 && !message.method) {
         send({ method: 'initialized', params: {} });
         send({ id: 2, method: 'thread/start', params: {
           ...(options.model === 'default' ? {} : { model: options.model }),
           allowProviderModelFallback: false,
-          cwd: config.cwd ?? process.cwd(), ephemeral: true,
-          approvalPolicy: 'untrusted', approvalsReviewer: 'user', sandbox: 'read-only',
-          ...(options.tools?.length ? { dynamicTools: options.tools.map(tool => ({
+          cwd, ephemeral: true,
+          approvalPolicy: 'untrusted', approvalsReviewer: 'user', sandbox: policy === 'write-enabled' ? 'workspace-write' : 'read-only',
+          ...(options.tools?.length ? { dynamicTools: options.tools.filter(tool => tool.function.name !== 'proxy_approve_action').map(tool => ({
             type: 'function', name: tool.function.name, description: tool.function.description ?? '',
             inputSchema: tool.function.parameters ?? { type: 'object', properties: {} },
           })) } : {}),
         } });
       } else if (message.id === 2 && !message.method) {
+        clearTimeout(startup);
         threadId = message.result?.thread?.id;
         if (!threadId) throw new ProxyError('Codex did not return a thread ID.', 502, 'cli_protocol_error');
         send({ id: 3, method: 'turn/start', params: { threadId, input: [{ type: 'text', text: options.prompt }] } });
@@ -102,14 +119,14 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
           if (!Object.values(action).some(value => value !== undefined && value !== null)) throw new ProxyError('Codex requested approval without an action preview.', 502, 'cli_protocol_error');
           const approved = await options.onApproval!({
             action: JSON.stringify(action, null, 2),
-            ...(typeof params.cwd === 'string' ? { cwd: params.cwd } : { cwd: config.cwd ?? process.cwd() }),
+            ...(typeof params.cwd === 'string' ? { cwd: params.cwd } : { cwd }),
             reason: typeof params.reason === 'string' ? params.reason : message.method,
           });
           options.signal.throwIfAborted();
           send({ id: message.id, result: { decision: approved ? 'accept' : 'decline' } });
         } else if (message.method === 'item/tool/call' && message.id !== undefined) {
           const name = String(params.tool);
-          if (!options.tools?.some(tool => tool.function.name === name) || !options.onToolCall) {
+          if (name === 'proxy_approve_action' || !options.tools?.some(tool => tool.function.name === name) || !options.onToolCall) {
             send({ id: message.id, result: { success: false, contentItems: [{ type: 'inputText', text: 'Tool is not registered by the client.' }] } });
           } else {
             const call: ToolCall = { id: String(params.callId), type: 'function', function: { name, arguments: JSON.stringify(params.arguments ?? {}) } };
@@ -125,7 +142,7 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
         } else if (message.method === 'turn/completed') {
           if (params.turn?.status !== 'completed') {
             const text = turnError ?? params.turn?.error?.message ?? `Codex turn ${params.turn?.status ?? 'failed'}.`;
-            throw modelError(text) ?? new ProxyError(text);
+            throw authenticationError(text) ?? modelError(text) ?? new ProxyError(text);
           }
           if (!emitted) {
             const text = (params.turn.items ?? []).filter((item: any) => item.type === 'agentMessage').map((item: any) => item.text ?? '').join('');
@@ -136,6 +153,7 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
       }
     }
   } finally {
+    clearTimeout(startup);
     options.signal.removeEventListener('abort', abort);
     lines.close();
     child.stdin.end();

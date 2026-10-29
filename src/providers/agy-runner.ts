@@ -3,8 +3,11 @@ import { SpawnRunner, type Command, type OutputDecoder, type RunOptions } from '
 import { createAgyApprovalBridge } from './agy-approval-bridge.js';
 import { parseAgyModels } from '../models.js';
 import { modelError } from '../utils/model-error.js';
+import { authenticationError } from '../utils/cli-error.js';
 import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { SERVER_ROOT, HOOK_ROOT } from '../config.js';
 
 export class AgyDecoder implements OutputDecoder {
   private pending = '';
@@ -33,7 +36,7 @@ export class AgyDecoder implements OutputDecoder {
       const result = event.result;
       if (result?.status !== 'SUCCESS') {
         const message = `Antigravity failed (${result?.status ?? 'unknown'}): ${typeof result?.error === 'string' ? result.error : JSON.stringify(result?.error ?? 'No diagnostic output.')}`;
-        throw modelError(message) ?? new ProxyError(message);
+        throw authenticationError(message) ?? modelError(message) ?? new ProxyError(message);
       }
       // Some versions emit only the final response. Never duplicate streamed deltas.
       if (!this.emitted && typeof result.response === 'string') {
@@ -57,21 +60,28 @@ export class AgyRunner extends SpawnRunner {
 
   async listModels(signal: AbortSignal): Promise<string[]> {
     class Discovery extends SpawnRunner {
-      protected command(): Command { return { executable: this.config.executable ?? process.env.AGY_BIN ?? (process.platform === 'win32' ? 'agy.exe' : 'agy'), args: ['models'], input: '' }; }
+      protected command(): Command { return { provider: 'agy', executable: this.config.executable ?? process.env.AGY_BIN ?? (process.platform === 'win32' ? 'agy.exe' : 'agy'), args: ['models'], input: '' }; }
     }
     let text = '';
-    for await (const part of new Discovery({ ...this.config, maxOutputBytes: 1024 * 1024 }).run({ model: 'default', prompt: '', signal })) text += part;
+    for await (const part of new Discovery({ ...this.config, cwd: SERVER_ROOT, maxOutputBytes: 1024 * 1024 }).run({ model: 'default', prompt: '', signal })) text += part;
     return parseAgyModels(text);
   }
 
   override async *run(options: RunOptions): AsyncGenerator<string> {
-    if (!options.onApproval) { yield* super.run(options); return; }
+    if (options.tools?.length) throw new ProxyError('Antigravity client tools are unavailable.', 400, 'tool_not_supported');
+    if (!options.onApproval) throw new ProxyError('Antigravity requires an approval bridge.', 503, 'approval_hook_missing');
     // Use a per-invocation runner: shared provider instances serve concurrent requests.
-    const hooks = JSON.parse(await readFile(join(this.config.cwd ?? process.cwd(), '.agents', 'hooks.json'), 'utf8').catch(() => '{}'));
+    const cwd = options.context?.workingDirectory ?? this.config.cwd;
+    if (!cwd) throw new ProxyError('An explicit authorized workspace is required.', 403, 'workspace_not_authorized');
+    if (realpathSync(cwd) !== SERVER_ROOT) throw new ProxyError('Antigravity external workspace is blocked: this CLI has no verified per-invocation hook configuration. No files were installed in the workspace.', 503, 'approval_hook_missing');
+    let hooks;
+    try { hooks = JSON.parse(await readFile(join(HOOK_ROOT, 'hooks.json'), 'utf8')); }
+    catch { throw new ProxyError('Antigravity hook configuration is unavailable or invalid.', 503, 'approval_hook_missing'); }
     const entry = hooks['obsidian-cli-proxy-approval'];
-    const gate = entry?.PreToolUse?.some((rule: { matcher?: string; hooks?: Array<{ command?: string; type?: string }> }) => rule.matcher === '.*' && rule.hooks?.some(hook => hook.type === 'command' && hook.command === 'node dist/approval-hook.js'));
-    if (!gate || entry.enabled === false) throw new ProxyError('Antigravity approval hook is missing. Start the proxy in its project root, containing .agents/hooks.json, and run npm run build.', 503, 'approval_hook_missing');
-    await access(join(this.config.cwd ?? process.cwd(), 'dist', 'approval-hook.js')).catch(() => { throw new ProxyError('Build the Antigravity approval hook first with npm run build.', 503, 'approval_hook_missing'); });
+    const gate = entry?.PreToolUse?.some((rule: { matcher?: string; hooks?: Array<{ command?: string; type?: string }> }) => rule.matcher === '.*' && rule.hooks?.some(hook => hook.type === 'command' && hook.command === 'node approval-launcher.mjs'));
+    if (!gate || entry.enabled === false) throw new ProxyError('Antigravity approval hook is missing, disabled or invalid in the server HookRoot. Verify .agents/hooks.json and run npm run build.', 503, 'approval_hook_missing');
+    await access(join(HOOK_ROOT, 'approval-launcher.mjs')).catch(() => { throw new ProxyError('Approval launcher missing.', 503, 'approval_hook_missing'); });
+    await access(join(SERVER_ROOT, 'dist', 'approval-hook.js')).catch(() => { throw new ProxyError('Build the Antigravity approval hook first with npm run build.', 503, 'approval_hook_missing'); });
     const bridge = await createAgyApprovalBridge(options);
     const runner = new AgyRunner(this.config);
     runner.bridgeEnv = bridge.env;
@@ -85,13 +95,14 @@ export class AgyRunner extends SpawnRunner {
     if (/Authentication required|silent auth failed|Please sign in to view available models/i.test(stderr)) {
       return new ProxyError('Antigravity authentication is unavailable. Run agy interactively in your terminal to sign in, then restart the proxy with the same OS account and credential environment.', 502, 'cli_authentication_error');
     }
-    return undefined;
+    return super.errorFromStderr(stderr);
   }
 
   protected command(options: RunOptions): Command {
     const args = ['--input-format', 'stream-json', '--output-format', 'stream-json', '--disable-slash-commands'];
     if (options.model !== 'default') args.push('--model', options.model);
     return {
+      provider: 'agy',
       executable: this.config.executable ?? process.env.AGY_BIN ?? (process.platform === 'win32' ? 'agy.exe' : 'agy'),
       args,
       input: JSON.stringify({ event: 'user', message: { content: options.prompt } }) + '\n',

@@ -7,6 +7,7 @@ const response = (id, result) => send({ id, result });
 let model = 'default';
 let message = '';
 let approvalCount = 0;
+let threadParams;
 const done = text => {
   send({ method: 'item/agentMessage/delta', params: { threadId: 'thread-fixture', delta: text } });
   send({ method: 'turn/completed', params: { threadId: 'thread-fixture', turn: { id: 'turn-fixture', status: 'completed', items: [] } } });
@@ -16,8 +17,10 @@ for await (const line of createInterface({ input: process.stdin })) {
   const event = JSON.parse(line);
   if (event.method === 'initialize') response(event.id, {});
   else if (event.method === 'thread/start') {
+    threadParams = event.params;
     model = event.params.model ?? 'default';
-    if (event.params.approvalPolicy !== 'untrusted' || event.params.sandbox !== 'read-only') throw new Error('Wrong approval configuration');
+    if (event.params.approvalPolicy !== 'untrusted' || !['read-only', 'workspace-write'].includes(event.params.sandbox)) throw new Error('Wrong approval configuration');
+    if (event.params.cwd !== process.cwd()) throw new Error('thread cwd differs from spawn cwd');
     if (model === 'invalid-model') send({ id: event.id, error: { message: 'Unknown model invalid-model' } });
     else response(event.id, { thread: { id: 'thread-fixture' } });
   } else if (event.method === 'turn/start') {
@@ -25,7 +28,9 @@ for await (const line of createInterface({ input: process.stdin })) {
     const transcript = JSON.parse(prompt.slice(prompt.indexOf('Conversation (JSON):\n') + 'Conversation (JSON):\n'.length));
     message = transcript.at(-1).content;
     response(event.id, { turn: { id: 'turn-fixture', status: 'inProgress' } });
-    if (message === 'fail') {
+    if (message === 'context') {
+      done(JSON.stringify({ cwd: process.cwd(), thread: threadParams, apiKey: process.env.PROXY_API_KEY ?? null, nodeOptions: process.env.NODE_OPTIONS ?? null }));
+    } else if (message === 'fail') {
       process.stderr.write('\x1b[31mAuthentication expired: sign in again.\x1b[0m');
       process.exit(7);
     } else if (message.startsWith('sleep:')) {

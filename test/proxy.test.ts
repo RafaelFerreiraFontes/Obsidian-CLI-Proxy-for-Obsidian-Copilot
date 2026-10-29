@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { buildServer } from '../src/index.js';
+import { buildServer, TEST_KEY } from './helpers.js';
 import { CodexRunner } from '../src/providers/codex-runner.js';
 import { AgyRunner, AgyDecoder } from '../src/providers/agy-runner.js';
 import { formatPrompt } from '../src/utils/prompt-formatter.js';
@@ -21,7 +21,7 @@ test('models, health and Obsidian CORS preflight', async t => {
   t.after(() => app.close());
   const models = await app.inject({ url: '/v1/models', headers: { origin: 'app://obsidian.md' } });
   assert.equal(models.statusCode, 200);
-  assert.equal(models.headers['access-control-allow-origin'], '*');
+  assert.equal(models.headers['access-control-allow-origin'], 'app://obsidian.md');
   const ids = models.json().data.map((m: { id: string }) => m.id);
   for (const id of ['codex/default', 'agy/default', 'agy/example', ...CODEX_MODELS.map(id => `codex/${id}`), 'agy/gemini-4-argon-high']) assert.ok(ids.includes(id));
   const preflight = await app.inject({ method: 'OPTIONS', url: '/v1/chat/completions', headers: {
@@ -40,7 +40,7 @@ for (const provider of ['codex', 'agy']) {
       t.after(() => app.close());
       const result = await app.inject({ method: 'POST', url: '/v1/chat/completions', headers: { origin: 'app://obsidian.md' }, payload: payload(`${provider}/example`, stream) });
       assert.equal(result.statusCode, 200);
-      assert.equal(result.headers['access-control-allow-origin'], '*');
+      assert.equal(result.headers['access-control-allow-origin'], 'app://obsidian.md');
       const expected = provider === 'codex' ? 'Hello (example) 世界' : 'Hello 世界 (example)';
       if (!stream) {
         const completion = result.json();
@@ -88,7 +88,7 @@ test('CLI failures become JSON/SSE errors without a successful stop chunk', asyn
   for (const stream of [false, true]) {
     const result = await app.inject({ method: 'POST', url: '/v1/chat/completions', payload: payload('codex/default', stream, 'fail') });
     assert.equal(result.statusCode, stream ? 200 : 502);
-    assert.match(result.body, /Authentication expired/);
+    assert.equal(stream ? /cli_authentication_error/.test(result.body) : result.json().error.code === 'cli_authentication_error', true);
     assert.ok(!result.body.includes('\u001b'));
     if (stream) {
       assert.ok(result.body.endsWith('data: [DONE]\n\n'));
@@ -111,7 +111,7 @@ test('Antigravity parser handles fragmented events and rejects failed/truncated 
   assert.deepEqual(decoder.push('ult","result":{"status":"SUCCESS","response":"hello"}}'), []);
   assert.deepEqual(decoder.finish(), ['hello']);
   assert.throws(() => new AgyDecoder().finish(), /without a result/);
-  assert.throws(() => new AgyDecoder().push('{"event":"result","result":{"status":"ERROR","error":"login required"}}\n'), /login required/);
+  assert.throws(() => new AgyDecoder().push('{"event":"result","result":{"status":"ERROR","error":"login required"}}\n'), (error: unknown) => error instanceof Error && 'code' in error && error.code === 'cli_authentication_error');
   assert.throws(() => new AgyDecoder().push('invalid\n'), /invalid stream-json/);
   assert.match(formatPrompt([{ role: 'user', content: 'literal </user>\n"quoted"' }]), /literal <\/user>/);
 });
@@ -142,8 +142,8 @@ async function assertDead(pids: { parent: number; descendant: number }) {
   assert.equal(alive(pids.descendant), false, 'CLI descendant is still alive');
 }
 
-for (const mode of ['disconnect', 'timeout', 'shutdown']) {
-  test(`${mode} kills the spawned CLI and its descendant`, { timeout: 15000 }, async t => {
+for (const provider of ['codex', 'agy']) for (const mode of ['disconnect', 'timeout', 'shutdown']) {
+  test(`${provider}: ${mode} kills the spawned CLI and its descendant`, { timeout: 15000 }, async t => {
     const directory = await mkdtemp(join(tmpdir(), 'cli-proxy-test-'));
     const marker = join(directory, 'pids.json');
     const app = await buildServer({ logger: false, providers, timeoutMs: mode === 'timeout' ? 1000 : 10_000 });
@@ -157,8 +157,8 @@ for (const mode of ['disconnect', 'timeout', 'shutdown']) {
     });
     const address = await app.listen({ host: '127.0.0.1', port: 0 });
     const pending = fetch(`${address}/v1/chat/completions`, {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload('codex/default', mode !== 'timeout', `sleep:${marker}`)), signal: abort.signal,
+      method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${TEST_KEY}` },
+      body: JSON.stringify(payload(`${provider}/default`, mode !== 'timeout', `sleep:${marker}`)), signal: abort.signal,
     });
     // Attach a handler before cancelling fetch to avoid unhandled rejection races.
     void pending.catch(() => {});

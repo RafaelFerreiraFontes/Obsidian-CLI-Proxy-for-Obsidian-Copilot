@@ -1,8 +1,10 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, execFile, type ChildProcess } from 'node:child_process';
 import { ProxyError } from '../types.js';
 import { AnsiFilter } from '../utils/ansi.js';
 import { modelError } from '../utils/model-error.js';
+import { authenticationError } from '../utils/cli-error.js';
 import type { OpenAITool, ToolCall } from '../types.js';
+import { cliEnvironment, SERVER_ROOT, validateExecution, type ExecutionContext } from '../config.js';
 
 export interface ApprovalRequest {
   action: string;
@@ -11,6 +13,8 @@ export interface ApprovalRequest {
 }
 
 export interface RunOptions {
+  context?: ExecutionContext;
+  approvalTimeoutMs?: number;
   model: string;
   prompt: string;
   signal: AbortSignal;
@@ -20,6 +24,7 @@ export interface RunOptions {
 }
 
 export interface CliRunner {
+  diagnose?(): Promise<{ available: boolean; code?: string }>;
   run(options: RunOptions): AsyncIterable<string>;
   listModels?(signal: AbortSignal): Promise<string[]>;
 }
@@ -30,6 +35,7 @@ export interface OutputDecoder {
 }
 
 export interface Command {
+  provider?: 'codex' | 'agy';
   executable: string;
   args: string[];
   input: string;
@@ -63,24 +69,41 @@ export function killProcessTree(child: ChildProcess): void {
 export abstract class SpawnRunner implements CliRunner {
   constructor(protected readonly config: RunnerConfig = {}) {}
   protected abstract command(options: RunOptions): Command;
-  protected errorFromStderr(_stderr: string): ProxyError | undefined { return undefined; }
+  protected errorFromStderr(stderr: string): ProxyError | undefined { return authenticationError(stderr); }
+  async diagnose(): Promise<{ available: boolean; code?: string }> {
+    const command = this.command({ model: 'default', prompt: '', signal: new AbortController().signal });
+    const executable = command.executable;
+    return new Promise(resolve => {
+      execFile(executable, [...(this.config.prefixArgs ?? []), '--help'], { cwd: SERVER_ROOT, env: cliEnvironment(command.provider), windowsHide: true, timeout: 3000, maxBuffer: 256 * 1024 }, error => {
+        resolve(error ? { available: false, code: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'cli_not_found' : 'cli_probe_failed' } : { available: true });
+      });
+    });
+  }
 
   async *run(options: RunOptions): AsyncGenerator<string> {
     options.signal.throwIfAborted();
+    if (options.context) validateExecution(options.context);
+    const cwd = options.context?.workingDirectory ?? this.config.cwd;
+    if (!cwd) throw new ProxyError('An explicit authorized workspace is required.', 403, 'workspace_not_authorized');
     const command = this.command(options);
-    const child = spawn(command.executable, [...(this.config.prefixArgs ?? []), ...command.args], {
-      cwd: this.config.cwd ?? process.cwd(),
+    const child = spawn(options.context?.profile.executable ?? command.executable, [...(this.config.prefixArgs ?? []), ...command.args], {
+      cwd,
       shell: false,
       windowsHide: true,
       detached: process.platform !== 'win32',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0', TERM: 'dumb', ...command.env },
+      env: { ...cliEnvironment(command.provider), ...command.env },
     });
     const outcome = new Promise<{ code: number | null; signal?: string; error?: Error }>(resolve => {
       child.once('error', error => resolve({ code: null, error }));
       child.once('close', (code, signal) => resolve({ code, ...(signal ? { signal } : {}) }));
     });
     const abort = () => killProcessTree(child);
+    const startup = setTimeout(() => {
+      diagnosticError = new ProxyError('CLI initialization timed out.', 504, 'cli_timeout');
+      killProcessTree(child);
+    }, options.context?.profile.startupTimeoutMs ?? 30_000);
+    startup.unref();
     options.signal.addEventListener('abort', abort, { once: true });
     if (options.signal.aborted) abort();
     let stderr = '';
@@ -104,13 +127,14 @@ export abstract class SpawnRunner implements CliRunner {
     let stdoutTail = '';
     const checkSize = (text: string) => {
       outputBytes += Buffer.byteLength(text);
-      if (outputBytes > (this.config.maxOutputBytes ?? 8 * 1024 * 1024)) {
+      if (outputBytes > (options.context?.profile.maxOutputBytes ?? this.config.maxOutputBytes ?? 8 * 1024 * 1024)) {
         throw new ProxyError('CLI output exceeded the configured limit.', 502, 'output_limit');
       }
     };
     let finished = false;
     try {
       for await (const raw of child.stdout) {
+        clearTimeout(startup);
         options.signal.throwIfAborted();
         const text = stdoutFilter.push(String(raw));
         stdoutTail = (stdoutTail + text).slice(-16384);
@@ -147,6 +171,7 @@ export abstract class SpawnRunner implements CliRunner {
       }
       throw cause;
     } finally {
+      clearTimeout(startup);
       options.signal.removeEventListener('abort', abort);
       if (!finished) {
         killProcessTree(child);

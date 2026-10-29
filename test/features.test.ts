@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { spawn } from 'node:child_process';
-import { buildServer } from '../src/index.js';
+import { buildServer, TEST_KEY } from './helpers.js';
 import { AgyRunner } from '../src/providers/agy-runner.js';
 import { CodexRunner } from '../src/providers/codex-runner.js';
 import { AGY_FALLBACK_MODELS, ModelCatalog, parseAgyModels } from '../src/models.js';
@@ -18,7 +18,7 @@ const fixture = fileURLToPath(new URL('./fixtures/cli.mjs', import.meta.url));
 const config = { executable: process.execPath, prefixArgs: [fixture] };
 const providers = { codex: new CodexRunner(config), agy: new AgyRunner(config) };
 const expectedCodexIds = ['codex/gpt-6.1-sol', 'codex/gpt-6-astra', 'codex/gpt-6-sol', 'codex/gpt-6-luna', 'codex/gpt-5.6-sol', 'codex/gpt-5.6-terra', 'codex/gpt-5.6-luna'];
-const post = (app: Awaited<ReturnType<typeof buildServer>>, body: ChatCompletionRequest, authorization = 'Bearer local-test') => app.inject({ method: 'POST', url: '/v1/chat/completions', headers: { authorization }, payload: body });
+const post = (app: Awaited<ReturnType<typeof buildServer>>, body: ChatCompletionRequest, authorization = `Bearer ${TEST_KEY}`) => app.inject({ method: 'POST', url: '/v1/chat/completions', headers: { authorization }, payload: body });
 const request = (model: string, text: string, stream = false): ChatCompletionRequest => ({ model, messages: [{ role: 'user', content: text }], stream });
 const assistantFrom = (body: string, stream: boolean): ChatMessage => {
   if (!stream) return JSON.parse(body).choices[0].message;
@@ -150,7 +150,7 @@ test('pending sessions reject cross-conversation/model/identity approvals and ca
   const first = (await post(app, body)).json().choices[0].message;
   const reply: ChatCompletionRequest = { ...body, messages: [...body.messages, first, { role: 'user', content: 'sim' }] };
   assert.equal((await post(app, { ...reply, model: 'codex/other' })).statusCode, 409);
-  assert.equal((await post(app, reply, 'Bearer unrelated')).statusCode, 409);
+  assert.equal((await post(app, reply, 'Bearer unrelated')).statusCode, 401);
   assert.equal((await post(app, { ...reply, messages: [{ role: 'user', content: 'different conversation' }, first, { role: 'user', content: 'sim' }] })).statusCode, 409);
   const undecided: ChatCompletionRequest = { ...body, messages: [...body.messages, first, { role: 'user', content: 'Explain that?' }] };
   const reminder = (await post(app, undecided)).json().choices[0].message;
@@ -172,11 +172,11 @@ test('pending approvals expire without running the action; shutdown cleans held 
 });
 
 const tools: OpenAITool[] = [{ type: 'function', function: { name: 'read_note', description: 'Read an Obsidian note', parameters: { type: 'object', properties: { path: { type: 'string' } } } } }];
-test('valid OpenAI tools are accepted by both providers', async t => {
+test('Codex tools are accepted and unsupported Antigravity tools fail explicitly', async t => {
   const app = await buildServer({ logger: false, providers });
   t.after(() => app.close());
   for (const provider of ['codex', 'agy']) {
-    assert.equal((await post(app, { ...request(`${provider}/default`, 'hello'), tools })).statusCode, 200);
+    assert.equal((await post(app, { ...request(`${provider}/default`, 'hello'), tools })).statusCode, provider === 'codex' ? 200 : 400);
   }
 });
 

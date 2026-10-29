@@ -4,6 +4,7 @@ import { ProxyError, type ChatCompletionRequest, type ChatMessage, type ToolCall
 import type { ApprovalRequest, CliRunner } from './providers/base.js';
 import { AsyncQueue } from './utils/async-queue.js';
 import { formatPrompt } from './utils/prompt-formatter.js';
+import { validateExecution, type ExecutionContext } from './config.js';
 
 export type SessionEvent = { type: 'text'; text: string } | { type: 'approval'; text: string } | { type: 'tool'; call: ToolCall } | { type: 'end' } | { type: 'error'; error: Error };
 type Pending = { token: string; event: SessionEvent; callId?: string; kind: 'approval' | 'tool'; resolve: (value: any) => void; reject: (error: Error) => void };
@@ -41,7 +42,7 @@ export class AgentSession {
   job: Promise<void> = Promise.resolve();
   private timer: NodeJS.Timeout | undefined;
 
-  constructor(readonly model: string, readonly principal: string, body: ChatCompletionRequest, private timeoutMs: number, private approvalMs: number, private remove: () => void) {
+  constructor(readonly model: string, readonly principal: string, body: ChatCompletionRequest, private timeoutMs: number, private approvalMs: number, private remove: () => void, readonly context?: ExecutionContext, readonly binding = '') {
     this.contextHash = transcriptHash(body.messages);
   }
 
@@ -60,7 +61,7 @@ export class AgentSession {
     return new Promise<T>((resolve, reject) => {
       const event = makeEvent(token);
       this.pending = { token, kind, event, ...(event.type === 'tool' ? { callId: event.call.id } : {}), resolve, reject };
-      this.arm(this.approvalMs, new ProxyError('Pending approval expired. Submit the original request again.', 410, 'approval_expired'));
+      this.arm(this.approvalMs, new ProxyError('Pending approval timed out. Submit the original request again.', 410, 'approval_timeout'));
       this.events.push(event);
     });
   }
@@ -72,13 +73,15 @@ export class AgentSession {
         for await (const text of runner.run({
           model: this.model.slice(this.model.indexOf('/') + 1), prompt: formatPrompt(body.messages),
           signal: this.controller.signal, ...(body.tools ? { tools: body.tools } : {}),
+          approvalTimeoutMs: this.approvalMs,
+          ...(this.context ? { context: this.context } : {}),
           onApproval: request => this.wait<boolean>('approval', token => {
             if (body.tools?.some(tool => tool.function.name === APPROVAL_TOOL)) {
               return { type: 'tool', call: { id: `call_${token}`, type: 'function', function: { name: APPROVAL_TOOL, arguments: JSON.stringify(request) } } };
             }
             return { type: 'approval', text: authorizationPrompt(request, token) };
           }),
-          onToolCall: call => this.wait<string>('tool', () => ({ type: 'tool', call })),
+          onToolCall: call => this.wait<string>('tool', () => ({ type: 'tool', call: { ...call, id: `call_${this.id}_${randomBytes(16).toString('hex')}` } })),
         })) {
           if (!this.terminal) this.events.push({ type: 'text', text });
         }
@@ -98,6 +101,7 @@ export class AgentSession {
   }
 
   resolve(value: boolean | string, body: ChatCompletionRequest): void {
+    if (this.context) validateExecution(this.context);
     const pending = this.pending;
     if (!pending) throw new ProxyError('This action is no longer pending.', 409, 'approval_not_pending');
     this.pending = undefined;
@@ -123,9 +127,10 @@ export class SessionManager {
 
   get size(): number { return this.sessions.size; }
 
-  acquire(body: ChatCompletionRequest, runner: CliRunner, authorization = ''): AgentSession {
+  acquire(body: ChatCompletionRequest, runner: CliRunner, authorization = '', context?: ExecutionContext): AgentSession {
     const model = canonicalModel(body.model);
     const principal = hash([authorization, body.user ?? '', body.conversation_id ?? '']);
+    const binding = hash([context, body.tools ?? []]);
     const last = body.messages.at(-1);
     let assistantIndex = body.messages.length - 2;
     while (assistantIndex >= 0 && body.messages[assistantIndex]?.role !== 'assistant') assistantIndex--;
@@ -137,6 +142,8 @@ export class SessionManager {
 
     if (token || last?.role === 'tool') {
       if (!session || !session.pending) throw new ProxyError('Pending action expired or was already answered. Submit the original request again.', 410, 'approval_expired');
+      if (session.binding !== binding) throw new ProxyError('Session workspace, tools or policy changed.', 409, 'session_conflict');
+      if (session.context) validateExecution(session.context);
       if (session.model !== model || session.principal !== principal || session.contextHash !== transcriptHash(body.messages.slice(0, assistantIndex))) {
         throw new ProxyError('Pending action does not belong to this conversation or model.', 409, 'approval_context_mismatch');
       }
@@ -163,7 +170,7 @@ export class SessionManager {
     } else {
       if (last?.role === 'user' && approvalDecision(messageText(last)) !== undefined) throw new ProxyError('There is no pending approval in this conversation.', 409, 'approval_not_pending');
       if (this.sessions.size >= this.maxSessions) throw new ProxyError('Too many active or pending CLI sessions.', 503, 'session_limit');
-      session = new AgentSession(model, principal, body, this.timeoutMs, this.approvalMs, () => this.sessions.delete(session!.id));
+      session = new AgentSession(model, principal, body, context?.profile.timeoutMs ?? this.timeoutMs, this.approvalMs, () => this.sessions.delete(session!.id), context, binding);
       this.sessions.set(session.id, session);
       session.start(body, runner);
     }

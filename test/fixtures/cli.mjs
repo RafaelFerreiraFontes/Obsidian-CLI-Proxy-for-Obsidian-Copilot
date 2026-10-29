@@ -2,7 +2,9 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-if (process.argv.includes('app-server')) {
+if (process.argv.includes('--help')) {
+  process.stdout.write('Fixture CLI help\n');
+} else if (process.argv.includes('app-server')) {
   await import('./codex-app-server.mjs');
 } else if (process.argv.includes('models')) {
   process.stdout.write('Fetching available models...\n\ngemini-4-argon-high     Gemini 4 Argon (High)\nclaude-opus-5-5-medium    Claude Opus 5.5 (Medium)\n');
@@ -35,7 +37,7 @@ if (message === 'auth-wait') {
 } else if (agy) {
   const event = data => process.stdout.write(JSON.stringify(data) + '\n');
   if (message.startsWith('approval') || message === 'edit-approval') {
-    const hook = spawn(process.execPath, [fileURLToPath(new URL('../../src/approval-hook.js', import.meta.url))], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const hook = spawn(process.execPath, ['approval-launcher.mjs'], { cwd: new URL('../../../../.agents/', import.meta.url), stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
     hook.stdin.end(JSON.stringify({ toolCall: { name: 'run_command', args: { CommandLine: 'echo approved', Cwd: process.cwd() } }, workspacePaths: [process.cwd()] }));
     let output = '';
     for await (const chunk of hook.stdout) output += chunk.toString();
