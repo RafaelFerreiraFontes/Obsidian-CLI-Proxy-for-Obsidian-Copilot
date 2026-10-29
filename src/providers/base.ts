@@ -5,6 +5,7 @@ import { modelError } from '../utils/model-error.js';
 import { authenticationError } from '../utils/cli-error.js';
 import type { OpenAITool, ToolCall } from '../types.js';
 import { cliEnvironment, SERVER_ROOT, validateExecution, type ExecutionContext } from '../config.js';
+import type { AgyWorkspaceRegistry } from '../agy-workspaces.js';
 
 export interface ApprovalRequest {
   action: string;
@@ -30,11 +31,14 @@ export interface CliRunner {
 }
 
 export interface OutputDecoder {
+  beforeOutput?(): Promise<void>;
+  readonly completed?: boolean;
   push(text: string): string[];
   finish(): string[];
 }
 
 export interface Command {
+  keepStdinOpen?: boolean;
   provider?: 'codex' | 'agy';
   executable: string;
   args: string[];
@@ -44,6 +48,7 @@ export interface Command {
 }
 
 export interface RunnerConfig {
+  agyRegistry?: AgyWorkspaceRegistry;
   executable?: string;
   // Useful for native Node launchers and deterministic integration fixtures; no shell parsing.
   prefixArgs?: string[];
@@ -119,7 +124,8 @@ export abstract class SpawnRunner implements CliRunner {
     });
     // EPIPE is expected when authentication fails before the CLI consumes stdin.
     child.stdin.on('error', () => {});
-    child.stdin.end(command.input);
+    if (command.keepStdinOpen) child.stdin.write(command.input);
+    else child.stdin.end(command.input);
     child.stdout.setEncoding('utf8');
     const stdoutFilter = new AnsiFilter();
     const responseFilter = new AnsiFilter();
@@ -139,7 +145,10 @@ export abstract class SpawnRunner implements CliRunner {
         const text = stdoutFilter.push(String(raw));
         stdoutTail = (stdoutTail + text).slice(-16384);
         checkSize(text);
-        for (const part of command.decoder?.push(text) ?? [text]) {
+        const parts = command.decoder?.push(text) ?? [text];
+        await command.decoder?.beforeOutput?.();
+        if (command.keepStdinOpen && command.decoder?.completed) child.stdin.end();
+        for (const part of parts) {
           const clean = responseFilter.push(part);
           if (clean) yield clean;
         }

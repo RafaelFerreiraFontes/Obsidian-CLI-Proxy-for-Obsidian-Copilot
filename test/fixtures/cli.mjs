@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 
 if (process.argv.includes('--help')) {
   process.stdout.write('Fixture CLI help\n');
@@ -10,14 +12,43 @@ if (process.argv.includes('--help')) {
   process.stdout.write('Fetching available models...\n\ngemini-4-argon-high     Gemini 4 Argon (High)\nclaude-opus-5-5-medium    Claude Opus 5.5 (Medium)\n');
 } else {
 
-let input = '';
-for await (const chunk of process.stdin) input += chunk.toString();
 const agy = process.argv.includes('--input-format');
+let input = '';
+if (agy) {
+  await new Promise(resolve => {
+    const receive = data => { input += data; if (input.includes('\n')) { process.stdin.off('data', receive); process.stdin.pause(); resolve(); } };
+    process.stdin.on('data', receive);
+  });
+} else for await (const chunk of process.stdin) input += chunk.toString();
 const prompt = agy ? JSON.parse(input).message.content : input;
 const transcript = JSON.parse(prompt.slice(prompt.indexOf('Conversation (JSON):\n') + 'Conversation (JSON):\n'.length));
-const message = transcript.at(-1).content;
+let message = transcript.at(-1).content;
+const nativeInit = agy && message.startsWith('native-init:');
+const registered = agy && JSON.parse(readFileSync(join(process.cwd(), '.agents/hooks.json'), 'utf8'))['obsidian-cli-proxy-approval']?.SessionStart;
+if (registered && process.argv[process.argv.indexOf('--add-dir') + 1] !== process.cwd()) throw new Error('Authorized workspace was not mounted through --add-dir');
+const conversationId = registered ? randomUUID() : undefined;
+if (nativeInit) {
+  message = message.slice('native-init:'.length);
+}
+if (conversationId) {
+  process.stdout.write(JSON.stringify({ event: 'init', conversation_id: conversationId, init: { cwd: process.cwd(), tools: [] } }) + '\n');
+}
+const hookEnv = nativeInit ? { ...process.env, CLI_PROXY_HOOK_URL: '', CLI_PROXY_HOOK_TOKEN: '' } : process.env;
 const modelIndex = process.argv.indexOf('--model');
 const model = modelIndex < 0 ? 'default' : process.argv[modelIndex + 1];
+if (agy) {
+  const hookDirectory = join(process.cwd(), '.agents');
+  const hookConfig = JSON.parse(readFileSync(join(hookDirectory, 'hooks.json'), 'utf8'));
+  const entry = hookConfig['obsidian-cli-proxy-approval'];
+  const ready = message === 'only-pre-invocation' ? entry?.PreInvocation?.[0] : entry?.SessionStart?.[0];
+  if (ready && message !== 'skip-readiness') {
+    const match = /^(?:"([^"]+)"|([^\s"]+)) ([a-zA-Z0-9.-]+\.mjs) --ready$/.exec(ready.command);
+    if (!match) throw new Error('Unexpected readiness command');
+    const hook = spawn(match[1] ?? match[2], [match[3], '--ready'], { cwd: hookDirectory, env: hookEnv, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    hook.stdin.end(JSON.stringify({ conversationId, workspacePaths: [process.cwd()] }));
+    for await (const _chunk of hook.stdout) {}
+  }
+}
 if (model === 'invalid-model') {
   process.stderr.write('Unknown model invalid-model');
   process.exit(1);
@@ -36,9 +67,18 @@ if (message === 'auth-wait') {
   setInterval(() => {}, 1000);
 } else if (agy) {
   const event = data => process.stdout.write(JSON.stringify(data) + '\n');
-  if (message.startsWith('approval') || message === 'edit-approval') {
-    const hook = spawn(process.execPath, ['approval-launcher.mjs'], { cwd: new URL('../../../../.agents/', import.meta.url), stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
-    hook.stdin.end(JSON.stringify({ toolCall: { name: 'run_command', args: { CommandLine: 'echo approved', Cwd: process.cwd() } }, workspacePaths: [process.cwd()] }));
+  if (message === 'stdin-lifecycle') {
+    let earlyEOF = false;
+    process.stdin.on('end', () => { earlyEOF = true; }); process.stdin.resume();
+    setTimeout(() => event({ event: 'result', result: { status: 'SUCCESS', response: earlyEOF ? 'closed too early' : 'input kept open' } }), 50);
+  } else if (message.startsWith('approval') || message === 'edit-approval') {
+    const hookDirectory = join(process.cwd(), '.agents');
+    const hookConfig = JSON.parse(readFileSync(join(hookDirectory, 'hooks.json'), 'utf8'));
+    const command = hookConfig['obsidian-cli-proxy-approval'].PreToolUse[0].hooks[0].command;
+    const match = /^(?:"([^"]+)"|([^\s"]+)) ([a-zA-Z0-9.-]+\.mjs)$/.exec(command);
+    if (!match) throw new Error('Unexpected hook command');
+    const hook = spawn(match[1] ?? (match[2] === 'node' ? process.execPath : match[2]), [match[3]], { cwd: hookDirectory, env: hookEnv, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    hook.stdin.end(JSON.stringify({ conversationId, toolCall: { name: 'run_command', args: { CommandLine: 'echo approved', Cwd: process.cwd() } }, workspacePaths: [process.cwd()] }));
     let output = '';
     for await (const chunk of hook.stdout) output += chunk.toString();
     const decision = JSON.parse(output).decision;

@@ -139,15 +139,85 @@ OpenCode não foi localizado no PATH deste ambiente; OpenCode **2.2.0 e Traycer 
 
 Traycer A2A: **não validado**. O caminho Codex tem bridge estruturada testada com fixtures, mas schemas/resultados reais das ferramentas A2A precisam de teste ponta a ponta no cliente. AGY com ferramentas de cliente é BLOCKED. Não anuncie suporte A2A completo.
 
-## Hook Antigravity: correção e bloqueio externo
+## Hook Antigravity e workspaces externos
 
 O erro original foi corrigido em `.agents/hooks.json`: agora `node approval-launcher.mjs` resolve o launcher na pasta de hooks que o AGY utiliza. O launcher importa `../dist/approval-hook.js` relativo a import.meta.url. Não depende do cwd do servidor nem concatena caminhos em shell; espaços/Unicode não viram argumentos extras. O preflight confere essa configuração, o launcher e **o mesmo handler** em ServerRoot/dist. Não copiamos o handler para `.agents/dist`.
 
-A cada invocação há um bridge loopback com token aleatório exclusivo, enviado somente ao subprocesso AGY. Hook ausente, handler indisponível, token ausente, URL inválida, bridge inacessível, payload inválido, timeout e negação bloqueiam a ação. O handler só aceita HTTP loopback, não segue redirects e usa prazo limitado. O bridge mostra o workspace autorizado, sem confiar em Cwd informado pelo modelo. A aprovação não é inferida de respostas do agente.
+A cada invocação há um bridge loopback com token aleatório exclusivo. O token fica no ambiente do subprocesso e, para workspaces externos, no registro privado temporário do servidor descrito abaixo; nunca no workspace do agente. Hook ausente, handler indisponível, token ausente, URL inválida, bridge inacessível, payload inválido, timeout e negação bloqueiam a ação. O handler só aceita HTTP loopback, não segue redirects e usa prazo limitado. O bridge mostra o workspace autorizado, sem confiar em Cwd informado pelo modelo. A aprovação não é inferida de respostas do agente.
 
-**BLOCKED: AGY em workspaces externos sem alterar sua configuração.** A ajuda instalada não tem flag de hooks/settings/MCP por invocação. Os locais documentados são workspace, global ou plugin instalado. Não há mecanismo seguro verificado para injetar o hook temporário sem modificar o projeto externo ou o estado global. Portanto o adaptador recusa esses workspaces com approval_hook_missing antes de iniciar o CLI. Nunca troca silenciosamente para o cwd do proxy. Chat AGY continua disponível quando o operador autoriza explicitamente a instalação do proxy como workspace; isso não é fallback e expõe esse projeto às ações aprovadas.
+A implementação local oferece registro consentido de hooks, mas **a execução externa permanece bloqueada antes do spawn em produção**, mesmo com registro íntegro. A etapa 2.1.1 comprovou launcher/handler/bridge nativos e negação de escrita (C/D1 PASS); aprovação humana D2 continua BLOCKED, conforme `AGY_LAUNCHER_WINDOWS_REPORT.md`. Sem registro retorna approval_hook_missing; com registro retorna approval_hook_failed. Não há flag de ambiente/HTTP para contornar esse bloqueio. O fluxo abaixo não habilita uso normal no vault. Autorizar o workspace na API não autoriza instalar configuração. O proxy HTTP nunca instala arquivos.
 
-**BLOCKED: bridge MCP AGY/OpenAI.** A alternativa de menor impacto é usar Codex para trabalho externo e client tools. Para avançar no AGY: obter do fornecedor um mecanismo documentado de configuração por invocação (ou autorizar separadamente um plugin instalado); criar MCP stdio ou loopback autenticado por sessão, registrar apenas schemas permitidos, encaminhar tools/call para uma chamada OpenAI pendente, devolver resultado/erro correlacionado ao mesmo processo, cancelar e remover recursos no término. Exige ainda validar retenção do turno headless enquanto o MCP aguarda. Nada disso está declarado implementado.
+O registro insere somente a entrada gerenciada em `.agents/hooks.json` (SessionStart, PreInvocation e PreToolUse) e cria `.agents/obsidian-cli-proxy-launcher.mjs`. No Windows, usa o Node canônico absoluto **sem aspas**, seguido do nome relativo do launcher: `C:/ProgramData/nvm/v24.19.0/node.exe obsidian-cli-proxy-launcher.mjs`. O dispatcher AGY 1.4.10 falhou nativamente com o executável entre aspas. Caminhos do Node que exijam quoting (espaços, Unicode ou caracteres de shell) são recusados no planejamento; use uma instalação padrão. O caminho do workspace pode conter espaços/Unicode, pois não é interpolado no comando. Não se procura Node no workspace. No Unix, o executável continua entre aspas. O launcher importa os handlers do servidor por file URL. Nenhum token é gravado no workspace. Hooks de terceiros são preservados; entradas homônimas, arquivos existentes e outros PreToolUse ativos são conflitos que exigem revisão manual. Não são desabilitados automaticamente.
+
+Registros Windows anteriores com Node entre aspas exigem migração explícita: pare as sessões, revise `plan-remove`, execute `remove` com aquele consentimento e depois revise `plan-install` e execute `install` com um novo consentimento. `status` bloqueia o formato antigo; nenhuma configuração é reescrita automaticamente. A remoção mantém as verificações dos recursos antigos e restaura os hooks anteriores.
+
+A bridge valida o contrato de cada ferramenta: `read_file`/`write_file` exigem `Path`, `view_file` exige `AbsolutePath`, escritas documentadas exigem `TargetFile`, e `run_command` exige `Cwd` e `CommandLine`. Ferramentas desconhecidas, parâmetro ausente, alvo fora do workspace, redirecionamento por link/junction ou sessão divergente são negados. Os argumentos originais são mantidos na solicitação ao operador, inclusive conteúdo e aspas; não há fallback de parâmetro para ServerRoot.
+
+No fluxo preparado, SessionStart ou PreInvocation envia uma atestação autenticada, com o workspace real, ao bridge exclusivo do processo. Ela não aprova ferramentas. Sem esse sinal dentro de CLI_STARTUP_TIMEOUT_MS, a execução é cancelada com approval_hook_failed; uma conclusão sem atestação não pode retornar sucesso. O bridge recusa ações antes do sinal. Porém, observar a ausência do sinal após iniciar o CLI não impede uma ação se o CLI ignorar hooks. Por isso o bloqueio anterior ao spawn permanece até verificar o contrato nativo; testes com fixtures não o habilitam em produção.
+
+O `conversation_id` do evento nativo init vincula uma credencial efêmera ao workspace em `.local/agy-runtime/` do servidor, nunca ao vault. O handler externo usa essa correlação em vez de presumir que um backend persistente herdou variáveis atuais do CLI. O arquivo é exclusivo, tem modo 0600 quando suportado e é removido no finally da execução; mantenha o diretório privado também nas ACLs Windows. Um crash abrupto pode deixar registro inerte, sem bridge vivo: inspecione-o com o servidor parado. Se o servidor estiver dentro do próprio workspace autorizado, essa alternativa é recusada para não gravar credenciais no workspace; instale o proxy fora do vault. Somente IDs UUID nativos são aceitos, e o workspace do payload também é validado. Não há caminho ou ID escolhido pelo modelo/HTTP para essa correlação.
+
+O runner também passa a raiz autorizada em --add-dir: a documentação informa que o projeto default do AGY independe de cwd. Não se cria projeto global nem se aceita project/flags livres do cliente. A atestação continua exigindo exatamente a raiz autorizada; raízes adicionais inesperadas são recusadas.
+
+Hashes SHA-256 e identidade de arquivo/diretório são registrados em `ServerRoot/.local/agy-workspaces/` (ignorado pelo Git), juntamente com a configuração anterior para remoção. Arquivo ausente, editado, desabilitado ou substituído é recusado. A validação ocorre antes do spawn e antes/depois da decisão de cada ação. Atualizar/mover o servidor ou handler pode exigir remover e registrar novamente. Proteja a instalação e esse registro contra escrita por terceiros; isso não é sandbox nem defesa completa contra corridas de filesystem após a última checagem.
+
+### Registrar o workspace notes com consentimento separado
+
+No `.env` **existente do servidor**, mantenha a chave real e acrescente/mescle as configurações, sem sobrescrever outros IDs/clientes. O caminho abaixo é ilustrativo:
+
+```dotenv
+PROXY_WORKSPACES='{"notes":"C:/Notes/My Vault"}'
+PROXY_DEFAULT_WORKSPACE=notes
+# Perfil agy padrão já usa supervised/tools:none.
+# Se PROXY_PROFILES estiver personalizado, inclua agy com esses valores e
+# autorize gemini-3.8-flash-medium em models (ou mantenha * deliberadamente).
+# Se usar PROXY_CLIENTS, conceda notes e agy à identidade do cliente.
+```
+
+Na raiz do proxy:
+
+```powershell
+npm run build
+node dist/agy-workspace-cli.js plan-install --workspace notes
+# Revise os caminhos, os dois arquivos e o aviso. Só prossiga se consentir
+# especificamente em instalar o hook no vault mostrado. Copie o hash consent:
+node dist/agy-workspace-cli.js install --workspace notes --consent '<HASH-DO-PLANO>'
+node dist/agy-workspace-cli.js status --workspace notes
+npm start
+```
+
+Também há `npm run agy:workspace -- <operação> ...`. O consentimento só vale para os bytes/identidades do plano: se os arquivos mudarem, gere e revise outro plano. `status` verifica arquivos/configuração, **não comprova** que o CLI real carregou o hook ou concluiu inferência. Não execute o install no vault apenas para testar: use primeiro um workspace temporário.
+
+Para remover, pare as sessões AGY e revise outro plano:
+
+```powershell
+node dist/agy-workspace-cli.js plan-remove --workspace notes
+node dist/agy-workspace-cli.js remove --workspace notes --consent '<HASH-DO-PLANO-DE-REMOCAO>'
+```
+
+Se hooks.json não mudou após instalar, seus bytes originais são restaurados (ou o arquivo é removido se não existia). Se somente hooks de terceiros foram acrescentados, remove-se apenas a entrada gerenciada e preservam-se os demais. O launcher gerenciado é removido; `.agents` não é apagado. Recursos gerenciados alterados bloqueiam a remoção automática: inspecione/restaure-os antes. Uma instalação interrompida fica bloqueada sem registro válido; examine os dois arquivos e o backup privado antes de tentar novamente. Não remova manualmente operator.lock sem confirmar que não há operação ativa.
+
+### Ferramentas MCP: bloqueio mantido
+
+**BLOCKED: bridge MCP AGY/OpenAI, ainda não implementada.** A documentação oficial confirma stdio e `.agents/mcp_config.json` por workspace. Isso oferece um caminho com consentimento separado, mas não comprova o ciclo tools/call → tool_calls → role:tool → continuação da mesma inferência. O Gemini respondeu OK no teste real, mas a carga dos hooks não foi atestada e nenhum ciclo MCP/OpenAI foi validado. Perfis AGY continuam aceitando somente tools:none e a API rejeita tools antes do spawn. Nada é instalado em mcp_config.json por este registro.
+
+Próxima implementação verificável: registrar com outro plano consentido um servidor MCP stdio estático do proxy no workspace; herdar URL/token aleatórios do processo AGY para o subprocesso MCP (sem gravá-los); listar somente schemas da sessão via bridge autenticado loopback; validar tools/call e encaminhar a onToolCall; suspender até role:tool e retornar conteúdo/erro ao mesmo request MCP. É necessário provar herança de ambiente, nomes reais, timeout durante a espera, correlação, concorrência e limpeza no AGY real antes de habilitar tools:client. O nome reservado proxy_approve_action não poderá ser exposto ao modelo. Use Codex para ferramentas do cliente enquanto isso.
+
+### Testar Gemini nos clientes
+
+Os exemplos abaixo descrevem o contrato pretendido para o aceite futuro. Nesta entrega, requests em notes são bloqueados antes do spawn com approval_hook_failed mesmo após registro; não há configuração que habilite a execução externa nativa ainda não comprovada.
+
+No Copilot, use chat básico sem ferramentas, URL `http://127.0.0.1:3557/v1`, a chave local real e modelo `agy/gemini-3.8-flash-medium`. Configure PROXY_DEFAULT_WORKSPACE=notes ou envie X-Proxy-Workspace=notes; selecione perfil agy quando houver override. Preserve o histórico de aprovação e teste primeiro uma negação. Modos agent que enviam tools ainda recebem tool_not_supported.
+
+No OpenCode, adapte o provider ilustrativo acima: headers X-Proxy-Workspace=notes e X-Proxy-Profile=agy, modelo upstream agy/gemini-3.8-flash-medium. Só pode funcionar para requests efetivamente sem tools; negar execução de ferramentas nas permissões do cliente não comprova que suas definições deixam de ser enviadas. Se a versão instalada sempre enviar tools, este modo permanece bloqueado: não há configuração de compatibilidade automática no proxy. Para confirmar o contrato sem depender do cliente:
+
+```powershell
+$headers = @{ Authorization = "Bearer $env:LOCAL_PROXY_KEY"; 'X-Proxy-Workspace' = 'notes'; 'X-Proxy-Profile' = 'agy' }
+$body = @{ model = 'agy/gemini-3.8-flash-medium'; stream = $false; messages = @(@{ role = 'user'; content = 'Responda apenas OK' }) } | ConvertTo-Json -Depth 8
+Invoke-RestMethod http://127.0.0.1:3557/v1/chat/completions -Headers $headers -Method Post -ContentType application/json -Body $body
+```
+
+**Validação real protegida ainda pendente:** antes do bloqueio final de produção, tentativas iniciais expiraram após 90s; com prazo maior o Gemini respondeu OK, mas o proxy recusou a conclusão por falta de atestação dos hooks. Isso comprova a resposta do modelo, não a aprovação segura. Uma chamada direta print com prazo curto também retornou SUCCESS vazio e usage zero; isso não conta como sucesso funcional. Nenhum vault foi alterado nem houve novo login. Stdin permanece aberto até result e SUCCESS vazio gera erro de protocolo. Os resultados atuais, incluindo a verificação negativa de PreToolUse, estão em [AGY_INTEGRATION_REPORT.md](AGY_INTEGRATION_REPORT.md).
 
 ## Segurança, diagnóstico e erros
 
@@ -175,7 +245,7 @@ Invoke-RestMethod http://127.0.0.1:3557/v1/chat/completions -Headers $headers -M
 # Para SSE, use curl.exe -N com o mesmo Bearer e X-Proxy-Workspace.
 ```
 
-Não coloque a chave literal no histórico de comandos. LOCAL_PROXY_KEY é uma variável do cliente; o proxy usa PROXY_API_KEY ou PROXY_CLIENTS. Para AGY, escolha modelo agy/default, perfil agy e um ID explicitamente permitido; diretório externo retorna o bloqueio descrito acima.
+Não coloque a chave literal no histórico de comandos. LOCAL_PROXY_KEY é uma variável do cliente; o proxy usa PROXY_API_KEY ou PROXY_CLIENTS. Para AGY, perfil/modelo/workspace precisam ser autorizados; workspaces externos continuam bloqueados pela verificação nativa pendente, mesmo após registro consentido.
 
 Os testes usam CLIs Node falsos, fixtures e diretórios temporários, incluindo writes de sentinelas aprovadas. Nunca usam a Starlight real. Nenhum teste exige login ou inferência paga. A suíte cobre dev/start, reload, configuração, autenticação, workspace, junction, concorrência, políticas, JSON/SSE, aprovações, tools Codex, negação AGY, hook e cancelamento de descendentes de ambos os providers. No sandbox Windows, testes que passam por npm podem exigir permissão para encerrar a árvore completa; execute em um terminal normal para a validação local.
 
