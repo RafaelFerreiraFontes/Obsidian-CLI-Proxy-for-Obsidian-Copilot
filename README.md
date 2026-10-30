@@ -71,7 +71,7 @@ As raízes são canonicalizadas e fixadas na inicialização com realpath e iden
 
 `X-Proxy-Profile` escolhe um perfil autorizado; o default é o nome do provider (`codex` ou `agy`). O cliente não pode enviar flags, sandbox ou permissões livres. Campos HTTP extras continuam aceitos por compatibilidade, mas não alteram políticas.
 
-Cada perfil aceita `provider`, `policy`, `models` (sufixos exatos; `*` permite override), `tools` (`client`/`none`), `timeoutMs`, `startupTimeoutMs`, `maxOutputBytes` e `executable` opcional. Valores ausentes dos três limites herdam as variáveis globais. O executável opcional é definido exclusivamente pelo operador; o default vem de CODEX_BIN/AGY_BIN.
+Cada perfil aceita `provider`, `policy`, `models` (sufixos exatos; `*` permite override), `tools` (`client`/`none`), `timeoutMs`, `startupTimeoutMs`, `maxOutputBytes` e `executable` opcional. Os limites herdam as variáveis globais quando ausentes. O executável opcional é definido exclusivamente pelo operador; o default vem de CODEX_BIN/AGY_BIN.
 
 | Política Codex | sandbox | aprovação |
 | --- | --- | --- |
@@ -90,6 +90,21 @@ PROXY_CLIENTS='{"obsidian":{"key":"SUBSTITUA-POR-UMA-CHAVE-ALEATORIA-DE-32-CARAC
 ```
 
 PROXY_API_KEY, se configurada, representa a identidade compartilhada local e autoriza todos os IDs/perfis locais. Quem usa a mesma chave compartilha a identidade: `user` e `conversation_id` fornecem contexto adicional, não autenticação.
+
+### Prazos independentes
+
+| Fase | Campo do perfil | Variável | Default / máximo (ms) |
+|---|---|---|---|
+| Spawn AGY | spawnTimeoutMs | CLI_SPAWN_TIMEOUT_MS | 10000 / 60000 |
+| Evento init AGY | initTimeoutMs | AGY_INIT_TIMEOUT_MS | 30000 / 180000 |
+| Atestação dos hooks | attestationTimeoutMs | AGY_ATTESTATION_TIMEOUT_MS | 180000 / 600000 |
+| Execução ativa | timeoutMs | CLI_TIMEOUT_MS | 120000 / 3600000 |
+| Aprovação humana | approvalTimeoutMs | APPROVAL_TIMEOUT_MS | 300000 / 580000 |
+| Resultado de ferramenta | toolTimeoutMs | TOOL_TIMEOUT_MS | 300000 / 580000 |
+| Encerramento | shutdownTimeoutMs | CLI_SHUTDOWN_TIMEOUT_MS | 5000 / 30000 |
+
+AGY inicia o prazo de `init` somente após spawn e o de atestação após `init`. A espera humana suspende o prazo ativo e possui limite próprio; a decisão seguinte exige nova aprovação. `startupTimeoutMs` preserva o comportamento anterior do Codex e não substitui essas fases AGY. O encerramento limitado também se aplica ao Codex App Server. Erros distinguem `cli_spawn_timeout`, `cli_init_timeout`, `approval_attestation_timeout`, `cli_timeout`, `approval_timeout`, `tool_timeout` e `cli_shutdown_timeout`. Cancelamento continua encerrando a árvore de processos.
+
 
 ## Modelos e ferramentas
 
@@ -117,25 +132,29 @@ O fluxo de chat básico mantém o pedido em português. Responda exatamente `apr
 
 ## OpenCode e Traycer
 
-A documentação atual de OpenCode v2 permite headers e configuração explícita do provider OpenAI-compatible. Exemplo ilustrativo (valide contra o schema da versão instalada):
+O executável local `C:/Users/fedet/.opencode/bin/opencode.exe --version` informou **2.2.0**. O formato atual documentado usa `provider` (singular), `npm`, `options.baseURL`, `options.apiKey`, `options.headers` e IDs upstream nas chaves de `models`:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "providers": {
-    "local-proxy": {
+  "provider": {
+    "antigravity-cli-proxy": {
+      "npm": "@ai-sdk/openai-compatible",
       "name": "Local CLI Proxy",
-      "package": "@opencode/ai/providers/openai-compatible",
-      "env": ["LOCAL_PROXY_KEY"],
-      "settings": { "baseURL": "http://127.0.0.1:3557/v1" },
-      "headers": { "X-Proxy-Workspace": "engine-task", "X-Proxy-Profile": "codex" },
-      "models": { "codex-local": { "modelID": "codex/default", "name": "Codex local" } }
+      "options": {
+        "baseURL": "http://127.0.0.1:3557/v1",
+        "apiKey": "{env:LOCAL_PROXY_KEY}",
+        "headers": { "X-Proxy-Workspace": "fixture", "X-Proxy-Profile": "agy" }
+      },
+      "models": { "agy/gemini-3.8-flash-medium": { "name": "Gemini via proxy" } }
     }
   }
 }
 ```
 
-OpenCode não foi localizado no PATH deste ambiente; OpenCode **2.2.0 e Traycer Desktop não foram executados nem tiveram seus requests reais capturados**. Não há evidência de que seus metadados internos de diretório cheguem ao upstream Chat Completions de forma confiável. O proxy exige vínculo explícito via ID/default e credencial. Configure o ID do worktree exato criado pelo Traycer, não a raiz do proxy nem outro checkout. Não alteramos configuração global desses produtos.
+Configure `LOCAL_PROXY_KEY` com a chave Bearer local real e substitua `fixture` pelo ID previamente autorizado. Este exemplo segue a [documentação oficial](https://opencode.ai/docs/providers/); não foi aplicado à configuração global. Selecione `antigravity-cli-proxy/agy/gemini-3.8-flash-medium`. O OpenCode **2.2.0 real** enviou Bearer, workspace, perfil, modelo e 12 ferramentas no ensaio com servidor HTTP de fixture. Sua ferramenta `read` utiliza argumento `path`; ela leu somente o arquivo temporário indicado e devolveu o conteúdo em `role:tool` com o ID original. Isso valida o contrato do cliente, **sem comprovar OpenCode → Gemini/AGY ponta a ponta**. O primeiro ensaio expirou porque o harness deixava stdin aberto; com EOF explícito a execução concluiu normalmente.
+
+O runner externo AGY e `tools:client` continuam bloqueados em produção. O exemplo não torna esse fluxo utilizável por si só. Não use caminhos gerados pelo modelo para substituir headers ausentes. Para Codex, configure um perfil Codex autorizado e modelo `codex/default`. Nenhuma configuração global do OpenCode/Traycer foi alterada.
 
 Traycer A2A: **não validado**. O caminho Codex tem bridge estruturada testada com fixtures, mas schemas/resultados reais das ferramentas A2A precisam de teste ponta a ponta no cliente. AGY com ferramentas de cliente é BLOCKED. Não anuncie suporte A2A completo.
 
@@ -145,7 +164,7 @@ O erro original foi corrigido em `.agents/hooks.json`: agora `node approval-laun
 
 A cada invocação há um bridge loopback com token aleatório exclusivo. O token fica no ambiente do subprocesso e, para workspaces externos, no registro privado temporário do servidor descrito abaixo; nunca no workspace do agente. Hook ausente, handler indisponível, token ausente, URL inválida, bridge inacessível, payload inválido, timeout e negação bloqueiam a ação. O handler só aceita HTTP loopback, não segue redirects e usa prazo limitado. O bridge mostra o workspace autorizado, sem confiar em Cwd informado pelo modelo. A aprovação não é inferida de respostas do agente.
 
-A implementação local oferece registro consentido de hooks, mas **a execução externa permanece bloqueada antes do spawn em produção**, mesmo com registro íntegro. A etapa 2.1.1 comprovou launcher/handler/bridge nativos e negação de escrita (C/D1 PASS); aprovação humana D2 continua BLOCKED, conforme `AGY_LAUNCHER_WINDOWS_REPORT.md`. Sem registro retorna approval_hook_missing; com registro retorna approval_hook_failed. Não há flag de ambiente/HTTP para contornar esse bloqueio. O fluxo abaixo não habilita uso normal no vault. Autorizar o workspace na API não autoriza instalar configuração. O proxy HTTP nunca instala arquivos.
+A implementação local oferece registro consentido de hooks, mas **a execução externa permanece bloqueada antes do spawn em produção**, mesmo com registro íntegro. A etapa 2.1.1 comprovou launcher/handler/bridge nativos e negação de escrita (C/D1 PASS); a etapa 2.2 comprovou aprovação humana D2 em fixture isolada, conforme [AGY_STAGE22_REPORT.md](AGY_STAGE22_REPORT.md). O runner de produção ainda não satisfaz todos os pré-requisitos de proteção e isolamento. Sem registro retorna approval_hook_missing; com registro retorna approval_hook_failed. Não há flag de ambiente/HTTP para contornar esse bloqueio. O fluxo abaixo não habilita uso normal no vault. Autorizar o workspace na API não autoriza instalar configuração. O proxy HTTP nunca instala arquivos.
 
 O registro insere somente a entrada gerenciada em `.agents/hooks.json` (SessionStart, PreInvocation e PreToolUse) e cria `.agents/obsidian-cli-proxy-launcher.mjs`. No Windows, usa o Node canônico absoluto **sem aspas**, seguido do nome relativo do launcher: `C:/ProgramData/nvm/v24.19.0/node.exe obsidian-cli-proxy-launcher.mjs`. O dispatcher AGY 1.4.10 falhou nativamente com o executável entre aspas. Caminhos do Node que exijam quoting (espaços, Unicode ou caracteres de shell) são recusados no planejamento; use uma instalação padrão. O caminho do workspace pode conter espaços/Unicode, pois não é interpolado no comando. Não se procura Node no workspace. No Unix, o executável continua entre aspas. O launcher importa os handlers do servidor por file URL. Nenhum token é gravado no workspace. Hooks de terceiros são preservados; entradas homônimas, arquivos existentes e outros PreToolUse ativos são conflitos que exigem revisão manual. Não são desabilitados automaticamente.
 
@@ -153,7 +172,7 @@ Registros Windows anteriores com Node entre aspas exigem migração explícita: 
 
 A bridge valida o contrato de cada ferramenta: `read_file`/`write_file` exigem `Path`, `view_file` exige `AbsolutePath`, escritas documentadas exigem `TargetFile`, e `run_command` exige `Cwd` e `CommandLine`. Ferramentas desconhecidas, parâmetro ausente, alvo fora do workspace, redirecionamento por link/junction ou sessão divergente são negados. Os argumentos originais são mantidos na solicitação ao operador, inclusive conteúdo e aspas; não há fallback de parâmetro para ServerRoot.
 
-No fluxo preparado, SessionStart ou PreInvocation envia uma atestação autenticada, com o workspace real, ao bridge exclusivo do processo. Ela não aprova ferramentas. Sem esse sinal dentro de CLI_STARTUP_TIMEOUT_MS, a execução é cancelada com approval_hook_failed; uma conclusão sem atestação não pode retornar sucesso. O bridge recusa ações antes do sinal. Porém, observar a ausência do sinal após iniciar o CLI não impede uma ação se o CLI ignorar hooks. Por isso o bloqueio anterior ao spawn permanece até verificar o contrato nativo; testes com fixtures não o habilitam em produção.
+No fluxo preparado, SessionStart ou PreInvocation envia uma atestação autenticada, com o workspace real, ao bridge exclusivo do processo. Ela não aprova ferramentas. Sem esse sinal dentro de AGY_ATTESTATION_TIMEOUT_MS, a execução é cancelada com approval_attestation_timeout; uma conclusão sem atestação não pode retornar sucesso. O bridge recusa ações antes do sinal. Porém, observar a ausência do sinal após iniciar o CLI não impede uma ação se o CLI ignorar hooks. Por isso o bloqueio anterior ao spawn permanece até verificar o contrato nativo; testes com fixtures não o habilitam em produção.
 
 O `conversation_id` do evento nativo init vincula uma credencial efêmera ao workspace em `.local/agy-runtime/` do servidor, nunca ao vault. O handler externo usa essa correlação em vez de presumir que um backend persistente herdou variáveis atuais do CLI. O arquivo é exclusivo, tem modo 0600 quando suportado e é removido no finally da execução; mantenha o diretório privado também nas ACLs Windows. Um crash abrupto pode deixar registro inerte, sem bridge vivo: inspecione-o com o servidor parado. Se o servidor estiver dentro do próprio workspace autorizado, essa alternativa é recusada para não gravar credenciais no workspace; instale o proxy fora do vault. Somente IDs UUID nativos são aceitos, e o workspace do payload também é validado. Não há caminho ou ID escolhido pelo modelo/HTTP para essa correlação.
 
@@ -197,11 +216,12 @@ node dist/agy-workspace-cli.js remove --workspace notes --consent '<HASH-DO-PLAN
 
 Se hooks.json não mudou após instalar, seus bytes originais são restaurados (ou o arquivo é removido se não existia). Se somente hooks de terceiros foram acrescentados, remove-se apenas a entrada gerenciada e preservam-se os demais. O launcher gerenciado é removido; `.agents` não é apagado. Recursos gerenciados alterados bloqueiam a remoção automática: inspecione/restaure-os antes. Uma instalação interrompida fica bloqueada sem registro válido; examine os dois arquivos e o backup privado antes de tentar novamente. Não remova manualmente operator.lock sem confirmar que não há operação ativa.
 
-### Ferramentas MCP: bloqueio mantido
+### Ferramentas MCP experimentais: bloqueio de produção mantido
 
-**BLOCKED: bridge MCP AGY/OpenAI, ainda não implementada.** A documentação oficial confirma stdio e `.agents/mcp_config.json` por workspace. Isso oferece um caminho com consentimento separado, mas não comprova o ciclo tools/call → tool_calls → role:tool → continuação da mesma inferência. O Gemini respondeu OK no teste real, mas a carga dos hooks não foi atestada e nenhum ciclo MCP/OpenAI foi validado. Perfis AGY continuam aceitando somente tools:none e a API rejeita tools antes do spawn. Nada é instalado em mcp_config.json por este registro.
+Há um adapter stdio e uma bridge autenticada por invocação, com schemas, validação de argumentos, correlação nativa, limites, uma chamada pendente, replay, cancelamento e encaminhamento para `AgentSession.onToolCall`. O ciclo estruturado OpenAI JSON/SSE → `role:tool` → resultado MCP possui testes com fixtures; isso não comprova inferência nativa continuada. `proxy_approve_action` não é oferecida ao modelo como ferramenta MCP.
 
-Próxima implementação verificável: registrar com outro plano consentido um servidor MCP stdio estático do proxy no workspace; herdar URL/token aleatórios do processo AGY para o subprocesso MCP (sem gravá-los); listar somente schemas da sessão via bridge autenticado loopback; validar tools/call e encaminhar a onToolCall; suspender até role:tool e retornar conteúdo/erro ao mesmo request MCP. É necessário provar herança de ambiente, nomes reais, timeout durante a espera, correlação, concorrência e limpeza no AGY real antes de habilitar tools:client. O nome reservado proxy_approve_action não poderá ser exposto ao modelo. Use Codex para ferramentas do cliente enquanto isso.
+O [registro MCP separado](AGY_MCP_REGISTRATION.md) preserva terceiros e não grava tokens no workspace. Descoberta, `tools/list`, `tools/call`, herança de credencial e continuação foram observadas no AGY 1.4.10 com aprovação humana específica. O ciclo HTTP nativo também retornou `tool_calls`, aceitou `role:tool` e continuou a inferência num adaptador de prova restrito. Consulte [o relatório da etapa 2.2](AGY_STAGE22_REPORT.md) para o resultado nativo completo. O transporte está integrado ao runner, mas sua habilitação de produção permanece bloqueada: perfis AGY continuam exigindo `tools:none` e requisições AGY com ferramentas são rejeitadas antes do spawn. `/v1/capabilities` continua anunciando somente as capacidades habilitadas. Use Codex para ferramentas do cliente enquanto os gates nativos pendentes não forem concluídos.
+
 
 ### Testar Gemini nos clientes
 
@@ -217,7 +237,7 @@ $body = @{ model = 'agy/gemini-3.8-flash-medium'; stream = $false; messages = @(
 Invoke-RestMethod http://127.0.0.1:3557/v1/chat/completions -Headers $headers -Method Post -ContentType application/json -Body $body
 ```
 
-**Validação real protegida ainda pendente:** antes do bloqueio final de produção, tentativas iniciais expiraram após 90s; com prazo maior o Gemini respondeu OK, mas o proxy recusou a conclusão por falta de atestação dos hooks. Isso comprova a resposta do modelo, não a aprovação segura. Uma chamada direta print com prazo curto também retornou SUCCESS vazio e usage zero; isso não conta como sucesso funcional. Nenhum vault foi alterado nem houve novo login. Stdin permanece aberto até result e SUCCESS vazio gera erro de protocolo. Os resultados atuais, incluindo a verificação negativa de PreToolUse, estão em [AGY_INTEGRATION_REPORT.md](AGY_INTEGRATION_REPORT.md).
+**Runner externo de produção: BLOCKED.** O teste HTTP nativo da etapa 2.2 comprovou atestação, aprovação humana de uma escrita, conteúdo correto, segunda aprovação independente e negação da segunda escrita. Usou um adaptador de prova que verifica a fixture e sobrescreve o bloqueio estático exclusivamente no script manual. Não comprova liberação do runner HTTP de produção. Os demais pré-requisitos A3/A4 e o limite de atestação posterior ao spawn estão no [relatório atual](AGY_STAGE22_REPORT.md). Nenhum vault foi alterado. SUCCESS vazio continua sendo erro de protocolo.
 
 ## Segurança, diagnóstico e erros
 
@@ -256,5 +276,20 @@ Pendências manuais: validar CLI real autenticado em diretório temporário; ver
 - [Node process.loadEnvFile](https://nodejs.org/api/process.html#processloadenvfilepath), [flags de ambiente](https://nodejs.org/api/cli.html#--env-file-if-existsfile): loader nativo compatível com Node 22.
 - [Codex App Server](https://learn.chatgpt.com/docs/app-server): ciclo JSON-RPC e ferramentas. Observado localmente: Codex CLI 0.164.0, --help, app-server --help e schema TypeScript experimental gerado em .tmp (não versionado). Esse schema confirma untrusted, sandbox, cwd e allowProviderModelFallback.
 - [Antigravity CLI](https://antigravity.google/docs/cli/reference/), [headless](https://antigravity.google/docs/cli/headless/), [hooks](https://antigravity.google/docs/hooks/): formato e locais de configuração. Observadas as ajudas agy --help, mcp --help, mcp add --help e plugin --help; não se fizeram login nem mudanças globais.
-- [OpenCode providers v2](https://dev.opencode.ai/v2/docs/providers/): configuração explícita de provider, headers e baseURL. Não equivale a evidência de tráfego real do Traycer.
+- [OpenCode providers v2](https://opencode.ai/docs/providers/): configuração explícita de provider, headers e baseURL. Não equivale a evidência de tráfego real do Traycer.
 - [MCP tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools): schemas e chamadas estruturadas; não comprova injeção isolada no AGY.
+
+
+## Hardening AGY/MCP — etapa 2.3
+
+Atualização da etapa 2.4: [relatório e evidências](AGY_STAGE24_REPORT.md), [contrato MCP por chamada](AGY_MCP_REGISTRATION.md) e [investigação de contenção Windows](AGY_WINDOWS_CONTAINMENT.md). A bridge agora exige os IDs nativos de conversa e raiz observados em `tools/call`, além de processo, sessão e lease. O runner de produção e `tools:client` continuam bloqueados; os relatórios anteriores preservam seu alcance histórico.
+
+Consulte [AGY_STAGE23_REPORT.md](AGY_STAGE23_REPORT.md) e [evidência sanitizada](test/evidence/agy-stage23.json). O runner externo e `tools:client` AGY continuam **BLOCKED**. Não há flag de ambiente para liberá-los. `/v1/capabilities` inclui `production_capability`, com o fingerprint revisado e os bloqueios efetivos; não anuncia execução externa ou ferramentas habilitadas.
+
+A bridge experimental exige um ID explícito da sessão OpenAI e mantém catálogo imutável por invocação autenticada, workspace, perfil e modelo; ausência do ID não gera sessão substituta. O PID vem do spawn do runner. No Windows, a conexão do worker exige filiação direta a esse processo, imagem Node canônica e identidade por PID/data de criação, revalidadas durante as operações. Ausência de evidência do processo bloqueia a conexão. Um worker encerrado ou reiniciado não reutiliza seu lease. Esses controles restringem o transporte local; não são sandbox de filesystem nem defesa contra outro processo com acesso aos segredos da mesma conta.
+
+A descoberta MCP pode anteceder o evento `init` do AGY: a listagem aguarda a associação nativa com prazo limitado, sem expor catálogo antes dela. Cada chamada exige aprovação PreToolUse específica, com repasse interno de uso único e validade de 30 segundos para iniciar a chamada. O resultado do cliente tem prazo independente. IDs repetidos, resultado tardio, desconexão, mudança de contexto e cancelamento são recusados. Há uma chamada pendente por invocação. Nenhuma chamada MCP pode gerar uma aprovação.
+
+O prazo humano configurado acompanha o lease privado fora do workspace, pois a herança de ambiente dos hooks não é garantida. O limite continua sendo 580000 ms; expiração nega a ação. Uma resposta humana tardia não autoriza uma conversa nova. Atualizar os handlers exige parar as sessões e revisar/remover/reinstalar os registros consentidos conforme seus planos de integridade.
+
+As provas de adaptadores, descoberta e concorrência descritas no relatório não habilitam o runner. Atestação posterior ao spawn não prova cobertura de todas as ferramentas, e `cwd`, realpath, hooks e o testemunho de processo não confinam o AGY. OpenCode com AGY em produção e Traycer A2A permanecem bloqueados pelos gates correspondentes. As evidências anteriores da etapa 2.2 permanecem históricas.

@@ -8,6 +8,7 @@ import { SessionManager, type AgentSession } from './sessions.js';
 import type { ToolCall } from './types.js';
 import { authenticate, executionContext, type Config } from './config.js';
 import { canonicalModel } from './models.js';
+import { agyCapabilitySummary } from './providers/agy-capabilities.js';
 
 export interface RouteOptions {
   config: Config;
@@ -92,7 +93,7 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
   app.get('/v1/capabilities', async request => ({
     authentication: 'required', configured_workspaces: authenticate(options.config, request.headers.authorization ?? '').client.workspaces,
     providers: { codex: { transport: 'app-server', client_tools: true, model_fallback: false, session_mode: 'ephemeral', authentication_verified: false },
-      agy: { transport: 'stream-json', client_tools: false, external_workspaces: false, external_workspace_blocker: 'native_hook_loading_unverified', workspace_registration: 'operator-consent', hook_integrity: 'sha256-and-file-identity', startup_attestation_verified: false, isolated_hook_injection: false, authentication_verified: false } },
+      agy: { transport: 'stream-json', client_tools: options.providers.agy.clientToolsReady === true && Object.values(options.config.profiles).some(p => p.provider === 'agy' && p.tools === 'client'), external_workspaces: false, external_workspace_blocker: 'production_protected_execution_unverified', production_capability: agyCapabilitySummary(), workspace_registration: 'operator-consent', hook_integrity: 'sha256-and-file-identity', startup_attestation_verified: false, isolated_hook_injection: false, authentication_verified: false } },
     profiles: Object.fromEntries(Object.entries(options.config.profiles).filter(([id]) => authenticate(options.config, request.headers.authorization ?? '').client.profiles.includes(id)).map(([id, p]) => [id, { provider: p.provider, policy: p.policy, tools: p.tools, models: p.models }])),
   }));
   if (options.config.diagnostics) app.get('/v1/diagnostics', async () => ({
@@ -113,7 +114,7 @@ export function registerRoutes(app: FastifyInstance, options: RouteOptions): voi
       return value ?? fallback;
     };
     const context = executionContext(options.config, auth, header('x-proxy-workspace', options.config.defaultWorkspace), header('x-proxy-profile', body.model.split('/')[0]!), canonicalModel(body.model));
-    if (body.tools?.length && (context.profile.tools === 'none' || context.profile.provider === 'agy')) throw new ProxyError('This profile/provider cannot bridge client tools. Use Codex dynamic tools.', 400, 'tool_not_supported');
+    if (body.tools?.length && (context.profile.tools === 'none' || (context.profile.provider === 'agy' && options.providers.agy.clientToolsReady !== true))) throw new ProxyError('This profile/provider cannot bridge client tools. Use Codex dynamic tools.', 400, 'tool_not_supported');
     if (new Set(body.tools?.map(t => t.function.name)).size !== (body.tools?.length ?? 0)) throw new ProxyError('Tool names must be unique.', 400, 'invalid_request_error');
     const slash = body.model.indexOf('/');
     const provider = options.providers[body.model.slice(0, slash) as 'codex' | 'agy'];

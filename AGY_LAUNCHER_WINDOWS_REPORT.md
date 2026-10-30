@@ -1,5 +1,7 @@
 # AGY — etapa 2.1.1, launcher Windows e bridge nativa
 
+> Atualização de 2026-10-29: a etapa 2.2 comprovou D2 com aprovação humana pelo canal HTTP, em fixture descartável. O bloqueio do runner externo de produção permanece. Consulte [AGY_STAGE22_REPORT.md](AGY_STAGE22_REPORT.md) para os gates atuais. A evidência histórica abaixo foi preservada.
+
 Experimento de 29/10/2026. Correção local, sem commit, push, merge, MCP ou configuração global. As alterações locais anteriores foram preservadas.
 
 ## Resultado

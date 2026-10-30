@@ -1,5 +1,7 @@
 # Correção AGY — registro externo e status das ferramentas
 
+> Atualização de 2026-10-29: a etapa 2.2 comprovou D2 com aprovação humana pelo canal HTTP, em fixture descartável. O bloqueio do runner externo de produção permanece. Consulte [AGY_STAGE22_REPORT.md](AGY_STAGE22_REPORT.md) para os gates atuais. A evidência histórica abaixo foi preservada.
+
 Base: `review/agy-proxy-local-state`, commit `285de74623f1ccce3ededb83aa87427b20ff18f5`. A implementação está na branch `fix/agy-external-workspace-tools`. Não houve alteração em master, no binário AGY, em credenciais ou configuração global. O vault real não foi modificado.
 
 **Estado da entrega: parcial e local, sem commit/push.** O aceite real de segurança falhou: houve resposta OK do modelo, mas não atestação de hooks. Seguindo a condição da tarefa para falhas graves, a publicação foi suspensa. HEAD continua no commit base; a branch de correção não foi publicada. Não houve PR ou merge.

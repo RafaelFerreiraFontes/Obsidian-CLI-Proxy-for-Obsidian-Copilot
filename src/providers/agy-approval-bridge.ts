@@ -36,7 +36,7 @@ function validateTool(input: unknown, root: string): { name: string; args: Recor
   return { name: tool.name, args };
 }
 
-export async function createAgyApprovalBridge(options: RunOptions, validateHook: () => void = () => {}, requireReady = false) {
+export async function createAgyApprovalBridge(options: RunOptions, validateHook: () => void = () => {}, requireReady = false, validateClientMcp?: (input: unknown) => boolean, onMcpDecision?: (input: unknown, approved: boolean) => void) {
   const token = randomBytes(32).toString('hex');
   let ready = !requireReady;
   let conversation: string | undefined;
@@ -48,6 +48,7 @@ export async function createAgyApprovalBridge(options: RunOptions, validateHook:
       response.writeHead(403).end(); return;
     }
     try {
+      request.setEncoding('utf8');
       let text = '';
       for await (const chunk of request) {
         text += chunk.toString();
@@ -66,8 +67,15 @@ export async function createAgyApprovalBridge(options: RunOptions, validateHook:
       if (!ready) throw new Error('Hook loading not attested');
       if (!Array.isArray(input.workspacePaths) || input.workspacePaths.length !== 1 || realpathSync(input.workspacePaths[0]) !== (options.context?.workspaceRoot ?? SERVER_ROOT) || (requireReady && input.conversationId !== conversation)) throw new Error('Invalid tool context');
       if (options.signal.aborted || !input.toolCall || typeof input.toolCall.name !== 'string' || !input.toolCall.args || typeof input.toolCall.args !== 'object' || Array.isArray(input.toolCall.args)) throw new Error('Invalid hook payload');
-      const tool = validateTool(input, options.context?.workspaceRoot ?? SERVER_ROOT);
+      const validateAction = () => {
+        // The trusted session bridge may validate its own client MCP call. It
+        // still requires a separate human approval here; it cannot approve files.
+        if (input.toolCall.name === 'call_mcp_tool' && input.toolCall.args.ServerName === 'obsidian-cli-proxy-tools' && validateClientMcp?.(input) === true) return { name: input.toolCall.name, args: input.toolCall.args };
+        return validateTool(input, options.context?.workspaceRoot ?? SERVER_ROOT);
+      };
+      const tool = validateAction();
       const args = tool.args;
+      if (response.destroyed) throw new Error('Approval caller disconnected');
       const approved = await options.onApproval!({
         action: `${input.toolCall.name}\n${JSON.stringify(args, null, 2)}`,
         cwd: options.context?.workingDirectory ?? SERVER_ROOT,
@@ -75,8 +83,10 @@ export async function createAgyApprovalBridge(options: RunOptions, validateHook:
       });
       validateHook();
       if (options.context) validateExecution(options.context);
-      validateTool(input, options.context?.workspaceRoot ?? SERVER_ROOT);
+      validateAction();
       options.signal.throwIfAborted();
+      if (response.destroyed) throw new Error('Approval caller disconnected before decision');
+      if (input.toolCall.name === 'call_mcp_tool') onMcpDecision?.(input, approved);
       response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ approved }));
     } catch {
       if (!response.destroyed) response.writeHead(200, { 'content-type': 'application/json' }).end('{"approved":false}');

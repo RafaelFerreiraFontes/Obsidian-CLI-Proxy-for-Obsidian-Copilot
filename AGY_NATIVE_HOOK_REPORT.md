@@ -1,5 +1,7 @@
 # AGY — experimento nativo 2.1, 2026-10-29
 
+> Atualização de 2026-10-29: a etapa 2.2 comprovou D2 com aprovação humana pelo canal HTTP, em fixture descartável. O bloqueio do runner externo de produção permanece. Consulte [AGY_STAGE22_REPORT.md](AGY_STAGE22_REPORT.md) para os gates atuais. A evidência histórica abaixo foi preservada.
+
 **Resultado:** hooks de workspace externos foram descobertos e o handler diagnóstico bloqueou leitura e escrita no AGY real. A integração completa do proxy não passou: o registro real não produziu atestação nem chamada à bridge antes do prazo. O bloqueio de produção deve permanecer. Não houve commit, push, MCP ou alteração de código de produção nesta etapa.
 
 ## Gates e origem da evidência

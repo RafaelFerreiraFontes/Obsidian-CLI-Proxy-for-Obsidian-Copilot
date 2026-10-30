@@ -32,3 +32,21 @@ test('hook credentials bind native conversation IDs and workspaces and expire on
   await lease1.close(); await lease2.close();
   assert.deepEqual(await readdir(privateDirectory), []);
 });
+
+
+test('private hook lease carries a bounded human deadline without requiring inherited environment', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'agy-lease-deadline-')); t.after(() => rm(root, { recursive: true, force: true }));
+  const workspace = join(root, 'workspace'), directory = join(root, 'private'); await mkdir(workspace);
+  const config = readConfig({ PROXY_API_KEY: TEST_KEY, PROXY_WORKSPACES: JSON.stringify({ fixture: workspace }) });
+  const context = executionContext(config, authenticate(config, `Bearer ${TEST_KEY}`), 'fixture', 'agy', 'agy/default');
+  const id = '33333333-3333-4333-8333-333333333333';
+  const credentials = { url: 'http://127.0.0.1:1/approve', token: 'fixture-only', approvalTimeoutMs: 580000 };
+  const lease = new HookCredentialLease(context, credentials, directory);
+  await lease.register(id, workspace);
+  assert.deepEqual(await readHookCredentials({ conversationId: id, workspacePaths: [workspace] }, directory), credentials);
+  await lease.close();
+  for (const approvalTimeoutMs of [0, 580001, NaN, 1.5]) {
+    await assert.rejects(new HookCredentialLease(context, { ...credentials, approvalTimeoutMs }, directory).register(id, workspace), /timeout/);
+  }
+  assert.deepEqual(await readdir(directory), []);
+});

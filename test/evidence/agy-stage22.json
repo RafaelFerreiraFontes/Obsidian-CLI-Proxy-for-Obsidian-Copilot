@@ -1,0 +1,919 @@
+{
+  "date": "2026-10-29",
+  "branch": "feat/agy-production-mcp-bridge",
+  "head": "21b85e6977c9d1d01efd208d93376e22dfaee2ce",
+  "agy": {
+    "version": "1.4.10",
+    "sha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+    "model": "gemini-3.8-flash-medium",
+    "node": "v24.19.0",
+    "scope": "Observed Windows executable; not a compatibility guarantee"
+  },
+  "humanWrite": {
+    "result": {
+      "productionGateUnchanged": true,
+      "proofAdapter": true,
+      "root": "<TEMP_EXPERIMENT>\\http-approval",
+      "outcome": "PASS",
+      "pendingObserved": true,
+      "humanApproved": true,
+      "absentBeforeHumanDecision": true,
+      "firstSentinelExists": true,
+      "contentMatches": true,
+      "secondRequiresApproval": true,
+      "secondSentinelAbsent": true,
+      "cleaned": true
+    },
+    "events": [
+      {
+        "at": "2026-10-29T20:05:10.600Z",
+        "phase": "runner-phase",
+        "value": "spawning"
+      },
+      {
+        "at": "2026-10-29T20:05:10.615Z",
+        "phase": "runner-phase",
+        "value": "initializing"
+      },
+      {
+        "at": "2026-10-29T20:05:13.731Z",
+        "phase": "runner-phase",
+        "value": "attesting"
+      },
+      {
+        "at": "2026-10-29T20:07:12.499Z",
+        "phase": "launcher-start",
+        "ready": true,
+        "node": "v24.19.0",
+        "cwd": "<TEMP_EXPERIMENT>\\http-approval\\.agents"
+      },
+      {
+        "at": "2026-10-29T20:07:12.578Z",
+        "phase": "runner-phase",
+        "value": "active"
+      },
+      {
+        "at": "2026-10-29T20:07:12.715Z",
+        "phase": "launcher-start",
+        "ready": true,
+        "node": "v24.19.0",
+        "cwd": "<TEMP_EXPERIMENT>\\http-approval\\.agents"
+      },
+      {
+        "at": "2026-10-29T20:07:18.240Z",
+        "phase": "launcher-start",
+        "ready": false,
+        "node": "v24.19.0",
+        "cwd": "<TEMP_EXPERIMENT>\\http-approval\\.agents"
+      },
+      {
+        "at": "2026-10-29T20:07:18.303Z",
+        "phase": "runner-phase",
+        "value": "waiting_approval"
+      },
+      {
+        "at": "2026-10-29T20:07:18.303Z",
+        "phase": "bridge-approval",
+        "tool": "write_file",
+        "actionHash": "c58b0dba26887d45a46f98ae759c4bb026683b6ff604070d75e1b9c47bc6097b",
+        "fixtureIndex": 0,
+        "exactAction": true
+      },
+      {
+        "at": "2026-10-29T20:07:53.986Z",
+        "phase": "bridge-decision",
+        "fixtureIndex": 0,
+        "approved": true
+      },
+      {
+        "at": "2026-10-29T20:07:53.987Z",
+        "phase": "runner-phase",
+        "value": "active"
+      },
+      {
+        "at": "2026-10-29T20:07:54.105Z",
+        "phase": "launcher-start",
+        "ready": true,
+        "node": "v24.19.0",
+        "cwd": "<TEMP_EXPERIMENT>\\http-approval\\.agents"
+      },
+      {
+        "at": "2026-10-29T20:07:58.559Z",
+        "phase": "launcher-start",
+        "ready": false,
+        "node": "v24.19.0",
+        "cwd": "<TEMP_EXPERIMENT>\\http-approval\\.agents"
+      },
+      {
+        "at": "2026-10-29T20:07:58.630Z",
+        "phase": "runner-phase",
+        "value": "waiting_approval"
+      },
+      {
+        "at": "2026-10-29T20:07:58.630Z",
+        "phase": "bridge-approval",
+        "tool": "write_file",
+        "actionHash": "0f623382d08ccb3cf52ff2b250d87b05deb8e64d2a052d15740c61fd0846127d",
+        "fixtureIndex": 1,
+        "exactAction": true
+      },
+      {
+        "at": "2026-10-29T20:07:58.645Z",
+        "phase": "bridge-decision",
+        "fixtureIndex": 1,
+        "approved": false
+      },
+      {
+        "at": "2026-10-29T20:07:58.646Z",
+        "phase": "runner-phase",
+        "value": "active"
+      },
+      {
+        "at": "2026-10-29T20:07:58.757Z",
+        "phase": "launcher-start",
+        "ready": true,
+        "node": "v24.19.0",
+        "cwd": "<TEMP_EXPERIMENT>\\http-approval\\.agents"
+      }
+    ],
+    "exactPathContentOverwriteFalseHashVerified": true
+  },
+  "mcpNativeBeforeHuman": {
+    "inheritance": {
+      "label": "inheritance",
+      "binarySha256": "FADE3D94282B8C1B12A24E54FFA930183BD6F6FF7A73A90421FB0AAB4D9402BA",
+      "events": [
+        {
+          "event": "init",
+          "cwdMatches": true,
+          "tools": [
+            "ask_custom_permission",
+            "ask_permission",
+            "ask_question",
+            "browser_click_element",
+            "browser_drag_pixel_to_pixel",
+            "browser_get_dom",
+            "browser_get_network_request",
+            "browser_input",
+            "browser_list_network_requests",
+            "browser_mouse_down",
+            "browser_mouse_up",
+            "browser_move_mouse",
+            "browser_press_key",
+            "browser_refresh_page",
+            "browser_resize_window",
+            "browser_scroll",
+            "browser_scroll_dom",
+            "browser_select_option",
+            "browser_subagent",
+            "call_mcp_tool",
+            "capture_browser_console_logs",
+            "capture_browser_screenshot",
+            "click_browser_pixel",
+            "command_status",
+            "define_subagent",
+            "delete_knowledge",
+            "execute_browser_javascript",
+            "find_by_name",
+            "finish",
+            "generate_image",
+            "grep_search",
+            "invoke_subagent",
+            "list_browser_pages",
+            "list_dir",
+            "list_permissions",
+            "list_plugin_accounts",
+            "list_resources",
+            "manage_inbox",
+            "manage_subagents",
+            "manage_task",
+            "multi_replace_file_content",
+            "notebook_edit",
+            "notebook_execution",
+            "open_browser_url",
+            "read_browser_page",
+            "read_resource",
+            "read_url_content",
+            "replace_file_content",
+            "run_command",
+            "run_workflow",
+            "schedule",
+            "search_marketplace",
+            "search_web",
+            "sed_file",
+            "send_command_input",
+            "send_message",
+            "view_file",
+            "wait",
+            "wait_5_seconds",
+            "write_to_file"
+          ],
+          "conversationHash": "b94bdd02abf1bb60089b3c096a7395fc6d1d25669aca33d7e4b7e7f915a3c0b6"
+        },
+        {
+          "event": "tool",
+          "name": "call_mcp_tool",
+          "state": "ACTIVE"
+        },
+        {
+          "event": "tool",
+          "name": "call_mcp_tool",
+          "state": "ERROR"
+        },
+        {
+          "event": "result",
+          "status": "SUCCESS",
+          "echoInResponse": false
+        }
+      ],
+      "stderrBytes": 0,
+      "nonce": "9c626e94c788e8242809761b",
+      "configurationContainsToken": false,
+      "outcome": "BLOCKED",
+      "exit": {
+        "code": 0
+      },
+      "versions": [
+        "1.4.10"
+      ],
+      "mcpLogFlags": {
+        "discovered": false,
+        "mcpError": true
+      },
+      "cleaned": true
+    },
+    "roundtrip": {
+      "label": "roundtrip",
+      "binarySha256": "FADE3D94282B8C1B12A24E54FFA930183BD6F6FF7A73A90421FB0AAB4D9402BA",
+      "events": [
+        {
+          "event": "init",
+          "cwdMatches": true,
+          "tools": [
+            "ask_custom_permission",
+            "ask_permission",
+            "ask_question",
+            "browser_click_element",
+            "browser_drag_pixel_to_pixel",
+            "browser_get_dom",
+            "browser_get_network_request",
+            "browser_input",
+            "browser_list_network_requests",
+            "browser_mouse_down",
+            "browser_mouse_up",
+            "browser_move_mouse",
+            "browser_press_key",
+            "browser_refresh_page",
+            "browser_resize_window",
+            "browser_scroll",
+            "browser_scroll_dom",
+            "browser_select_option",
+            "browser_subagent",
+            "call_mcp_tool",
+            "capture_browser_console_logs",
+            "capture_browser_screenshot",
+            "click_browser_pixel",
+            "command_status",
+            "define_subagent",
+            "delete_knowledge",
+            "execute_browser_javascript",
+            "find_by_name",
+            "finish",
+            "generate_image",
+            "grep_search",
+            "invoke_subagent",
+            "list_browser_pages",
+            "list_dir",
+            "list_permissions",
+            "list_plugin_accounts",
+            "list_resources",
+            "manage_inbox",
+            "manage_subagents",
+            "manage_task",
+            "multi_replace_file_content",
+            "notebook_edit",
+            "notebook_execution",
+            "open_browser_url",
+            "read_browser_page",
+            "read_resource",
+            "read_url_content",
+            "replace_file_content",
+            "run_command",
+            "run_workflow",
+            "schedule",
+            "search_marketplace",
+            "search_web",
+            "sed_file",
+            "send_command_input",
+            "send_message",
+            "view_file",
+            "wait",
+            "wait_5_seconds",
+            "write_to_file"
+          ],
+          "conversationHash": "8c095b9b24572e06caa3bce937c624871eb4022211e6a894d77ea9d85f08c390"
+        },
+        {
+          "event": "tool",
+          "name": "call_mcp_tool",
+          "state": "ACTIVE"
+        },
+        {
+          "event": "tool",
+          "name": "call_mcp_tool",
+          "state": "ERROR"
+        },
+        {
+          "event": "result",
+          "status": "SUCCESS",
+          "echoInResponse": false
+        }
+      ],
+      "stderrBytes": 295,
+      "nonce": "5c79301843659def636df2cd",
+      "configurationContainsToken": false,
+      "outcome": "BLOCKED",
+      "exit": {
+        "code": 0
+      },
+      "versions": [
+        "1.4.10"
+      ],
+      "mcpLogFlags": {
+        "discovered": false,
+        "mcpError": true
+      },
+      "authenticatedMcp": true,
+      "toolsListed": true,
+      "echoCalled": false,
+      "cleaned": true
+    },
+    "readonly": {
+      "label": "readonly",
+      "binarySha256": "FADE3D94282B8C1B12A24E54FFA930183BD6F6FF7A73A90421FB0AAB4D9402BA",
+      "events": [
+        {
+          "event": "init",
+          "cwdMatches": true,
+          "tools": [
+            "ask_custom_permission",
+            "ask_permission",
+            "ask_question",
+            "browser_click_element",
+            "browser_drag_pixel_to_pixel",
+            "browser_get_dom",
+            "browser_get_network_request",
+            "browser_input",
+            "browser_list_network_requests",
+            "browser_mouse_down",
+            "browser_mouse_up",
+            "browser_move_mouse",
+            "browser_press_key",
+            "browser_refresh_page",
+            "browser_resize_window",
+            "browser_scroll",
+            "browser_scroll_dom",
+            "browser_select_option",
+            "browser_subagent",
+            "call_mcp_tool",
+            "capture_browser_console_logs",
+            "capture_browser_screenshot",
+            "click_browser_pixel",
+            "command_status",
+            "define_subagent",
+            "delete_knowledge",
+            "execute_browser_javascript",
+            "find_by_name",
+            "finish",
+            "generate_image",
+            "grep_search",
+            "invoke_subagent",
+            "list_browser_pages",
+            "list_dir",
+            "list_permissions",
+            "list_plugin_accounts",
+            "list_resources",
+            "manage_inbox",
+            "manage_subagents",
+            "manage_task",
+            "multi_replace_file_content",
+            "notebook_edit",
+            "notebook_execution",
+            "open_browser_url",
+            "read_browser_page",
+            "read_resource",
+            "read_url_content",
+            "replace_file_content",
+            "run_command",
+            "run_workflow",
+            "schedule",
+            "search_marketplace",
+            "search_web",
+            "sed_file",
+            "send_command_input",
+            "send_message",
+            "view_file",
+            "wait",
+            "wait_5_seconds",
+            "write_to_file"
+          ],
+          "conversationHash": "50ccdc806706a3e2864c8e10a18152a55c9bce9976e49bc9e95ef0dbcb4d1642"
+        },
+        {
+          "event": "tool",
+          "name": "call_mcp_tool",
+          "state": "ACTIVE",
+          "errorFlags": {
+            "permission": false,
+            "denied": false,
+            "approval": false,
+            "not found": false,
+            "disconnected": false,
+            "timeout": false,
+            "hook": false,
+            "not connected": false,
+            "unsupported": false
+          }
+        },
+        {
+          "event": "tool",
+          "name": "call_mcp_tool",
+          "state": "ERROR",
+          "errorFlags": {
+            "permission": true,
+            "denied": true,
+            "approval": false,
+            "not found": false,
+            "disconnected": false,
+            "timeout": false,
+            "hook": false,
+            "not connected": false,
+            "unsupported": false
+          }
+        },
+        {
+          "event": "result",
+          "status": "SUCCESS",
+          "echoInResponse": false
+        }
+      ],
+      "stderrBytes": 295,
+      "nonce": "7e037efee01ba7ea280993fa",
+      "configurationContainsToken": false,
+      "outcome": "BLOCKED",
+      "exit": {
+        "code": 0
+      },
+      "versions": [
+        "1.4.10"
+      ],
+      "mcpLogFlags": {
+        "discovered": false,
+        "mcpError": true
+      },
+      "authenticatedMcp": true,
+      "toolsListed": true,
+      "echoCalled": false,
+      "cleaned": true
+    }
+  },
+  "mcpHuman": {
+    "result": {
+      "outcome": "PASS",
+      "proofAdapter": true,
+      "productionGateUnchanged": true,
+      "nonce": "7afcb2137644ef29d38d2c52",
+      "humanApproved": true,
+      "clientCallReceived": true,
+      "finalContainsResult": true,
+      "ready": true,
+      "cleaned": true
+    },
+    "events": [
+      {
+        "at": "2026-10-29T20:11:14.466Z",
+        "event": "phase",
+        "phase": "spawning"
+      },
+      {
+        "at": "2026-10-29T20:11:14.481Z",
+        "event": "phase",
+        "phase": "initializing"
+      },
+      {
+        "at": "2026-10-29T20:11:18.055Z",
+        "event": "phase",
+        "phase": "attesting"
+      },
+      {
+        "at": "2026-10-29T20:11:18.403Z",
+        "event": "mcp_tools_list",
+        "sessionHash": "7d3e36f04d22b54248342b904817ca2cd428f6176f25eb866549ad247e04bd18",
+        "conversationHash": "ac3406040d9fad7b25332c4e18cee46073b8a5f4e244095487abb56f46d7e21d"
+      },
+      {
+        "at": "2026-10-29T20:13:16.350Z",
+        "event": "phase",
+        "phase": "active"
+      },
+      {
+        "at": "2026-10-29T20:13:23.274Z",
+        "event": "phase",
+        "phase": "waiting_approval"
+      },
+      {
+        "at": "2026-10-29T20:13:23.276Z",
+        "event": "human-approval-pending",
+        "actionHash": "7603694b88cda2b0803188c2b8808971dcb06482ab60a464cae72cedc0b2c30d"
+      },
+      {
+        "at": "2026-10-29T20:15:02.703Z",
+        "event": "human-decision",
+        "approved": true
+      },
+      {
+        "at": "2026-10-29T20:15:02.704Z",
+        "event": "phase",
+        "phase": "active"
+      },
+      {
+        "at": "2026-10-29T20:15:03.652Z",
+        "event": "mcp_tool_pending",
+        "sessionHash": "7d3e36f04d22b54248342b904817ca2cd428f6176f25eb866549ad247e04bd18",
+        "conversationHash": "ac3406040d9fad7b25332c4e18cee46073b8a5f4e244095487abb56f46d7e21d",
+        "requestHash": "407625b3a30f628eb0a1e55b5dad9af6357602c5a2db18f576041ee5ee507bbf",
+        "tool": "echo_fixture"
+      },
+      {
+        "at": "2026-10-29T20:15:03.653Z",
+        "event": "client-echo-called",
+        "exactNonce": true
+      },
+      {
+        "at": "2026-10-29T20:15:04.178Z",
+        "event": "mcp_tool_resolved",
+        "sessionHash": "7d3e36f04d22b54248342b904817ca2cd428f6176f25eb866549ad247e04bd18",
+        "conversationHash": "ac3406040d9fad7b25332c4e18cee46073b8a5f4e244095487abb56f46d7e21d",
+        "requestHash": "407625b3a30f628eb0a1e55b5dad9af6357602c5a2db18f576041ee5ee507bbf",
+        "tool": "echo_fixture"
+      }
+    ]
+  },
+  "mcpHttp": {
+    "result": {
+      "outcome": "PASS",
+      "proofAdapter": true,
+      "productionGateUnchanged": true,
+      "nonce": "d5be048f6164d44b4916f512",
+      "humanApproved": true,
+      "toolCallsFinishReason": true,
+      "foreignIdRejected": true,
+      "nativeContinued": true,
+      "replayRejected": true,
+      "noResidualSession": true,
+      "cleaned": true
+    },
+    "events": [
+      {
+        "at": "2026-10-29T20:17:24.733Z",
+        "event": "phase",
+        "phase": "spawning"
+      },
+      {
+        "at": "2026-10-29T20:17:24.765Z",
+        "event": "phase",
+        "phase": "initializing"
+      },
+      {
+        "at": "2026-10-29T20:17:28.597Z",
+        "event": "phase",
+        "phase": "attesting"
+      },
+      {
+        "at": "2026-10-29T20:19:27.647Z",
+        "event": "phase",
+        "phase": "active"
+      },
+      {
+        "at": "2026-10-29T20:19:34.170Z",
+        "event": "phase",
+        "phase": "waiting_approval"
+      },
+      {
+        "at": "2026-10-29T20:19:34.170Z",
+        "event": "human-approval-pending",
+        "actionHash": "109d14d493601f59ee85c6fbf754836adc90d1196c2369ba2dc7662c11278f8d"
+      },
+      {
+        "at": "2026-10-29T20:20:47.989Z",
+        "event": "human-decision",
+        "approved": true
+      },
+      {
+        "at": "2026-10-29T20:20:47.989Z",
+        "event": "phase",
+        "phase": "active"
+      },
+      {
+        "at": "2026-10-29T20:20:48.336Z",
+        "event": "phase",
+        "phase": "waiting_tool"
+      },
+      {
+        "at": "2026-10-29T20:20:48.343Z",
+        "event": "openai-tool-call-received",
+        "callHash": "cc4f36a17c05aae6468e3e41c1b070f94ddb1f1a09b6333764d3c56b5fbbc2e9",
+        "tool": "echo_fixture",
+        "exactNonce": true
+      },
+      {
+        "at": "2026-10-29T20:20:48.360Z",
+        "event": "client-role-tool-submitted",
+        "callHash": "cc4f36a17c05aae6468e3e41c1b070f94ddb1f1a09b6333764d3c56b5fbbc2e9"
+      },
+      {
+        "at": "2026-10-29T20:20:48.376Z",
+        "event": "phase",
+        "phase": "active"
+      }
+    ]
+  },
+  "openCode": {
+    "version": "2.2.0",
+    "initialStdinOpen": {
+      "fixtureOnly": true,
+      "nativeGemini": false,
+      "requests": [],
+      "outcome": "BLOCKED",
+      "timeout": true,
+      "exitCode": 1,
+      "outputMatched": false,
+      "stderrBytes": 0,
+      "configError": false
+    },
+    "stdinClosed": {
+      "fixtureOnly": true,
+      "nativeGemini": false,
+      "requests": [
+        {
+          "authorizationMatches": true,
+          "workspaceMatches": true,
+          "profileMatches": true,
+          "modelMatches": true,
+          "toolCount": 0,
+          "toolResultReceived": false
+        },
+        {
+          "authorizationMatches": true,
+          "workspaceMatches": true,
+          "profileMatches": true,
+          "modelMatches": true,
+          "toolCount": 12,
+          "toolResultReceived": false
+        }
+      ],
+      "outcome": "PASS",
+      "exitCode": 0,
+      "outputMatched": true,
+      "stderrBytes": 0,
+      "configError": false
+    },
+    "readObservedContract": {
+      "fixtureOnly": true,
+      "nativeGemini": false,
+      "requests": [
+        {
+          "authorizationMatches": true,
+          "workspaceMatches": true,
+          "profileMatches": true,
+          "modelMatches": true,
+          "toolCount": 0,
+          "toolResultReceived": false,
+          "exactFixtureRead": false
+        },
+        {
+          "authorizationMatches": true,
+          "workspaceMatches": true,
+          "profileMatches": true,
+          "modelMatches": true,
+          "toolCount": 12,
+          "toolSchemas": [
+            {
+              "name": "edit",
+              "argumentKeys": [
+                "path",
+                "oldString",
+                "newString",
+                "replaceAll"
+              ]
+            },
+            {
+              "name": "glob",
+              "argumentKeys": [
+                "pattern",
+                "path",
+                "hidden",
+                "limit"
+              ]
+            },
+            {
+              "name": "grep",
+              "argumentKeys": [
+                "pattern",
+                "path",
+                "include",
+                "literal",
+                "caseSensitive",
+                "limit"
+              ]
+            },
+            {
+              "name": "question",
+              "argumentKeys": [
+                "questions"
+              ]
+            },
+            {
+              "name": "read",
+              "argumentKeys": [
+                "path",
+                "offset",
+                "limit"
+              ]
+            },
+            {
+              "name": "shell",
+              "argumentKeys": [
+                "command",
+                "workdir",
+                "timeout",
+                "background"
+              ]
+            },
+            {
+              "name": "skill",
+              "argumentKeys": [
+                "id"
+              ]
+            },
+            {
+              "name": "subagent",
+              "argumentKeys": [
+                "agent",
+                "description",
+                "prompt",
+                "model",
+                "sessionID",
+                "background"
+              ]
+            },
+            {
+              "name": "webfetch",
+              "argumentKeys": [
+                "url",
+                "format",
+                "timeout"
+              ]
+            },
+            {
+              "name": "websearch",
+              "argumentKeys": [
+                "query"
+              ]
+            },
+            {
+              "name": "write",
+              "argumentKeys": [
+                "path",
+                "content"
+              ]
+            },
+            {
+              "name": "execute",
+              "argumentKeys": [
+                "code"
+              ]
+            }
+          ],
+          "toolResultReceived": false,
+          "exactFixtureRead": false
+        },
+        {
+          "authorizationMatches": true,
+          "workspaceMatches": true,
+          "profileMatches": true,
+          "modelMatches": true,
+          "toolCount": 12,
+          "toolSchemas": [
+            {
+              "name": "edit",
+              "argumentKeys": [
+                "path",
+                "oldString",
+                "newString",
+                "replaceAll"
+              ]
+            },
+            {
+              "name": "glob",
+              "argumentKeys": [
+                "pattern",
+                "path",
+                "hidden",
+                "limit"
+              ]
+            },
+            {
+              "name": "grep",
+              "argumentKeys": [
+                "pattern",
+                "path",
+                "include",
+                "literal",
+                "caseSensitive",
+                "limit"
+              ]
+            },
+            {
+              "name": "question",
+              "argumentKeys": [
+                "questions"
+              ]
+            },
+            {
+              "name": "read",
+              "argumentKeys": [
+                "path",
+                "offset",
+                "limit"
+              ]
+            },
+            {
+              "name": "shell",
+              "argumentKeys": [
+                "command",
+                "workdir",
+                "timeout",
+                "background"
+              ]
+            },
+            {
+              "name": "skill",
+              "argumentKeys": [
+                "id"
+              ]
+            },
+            {
+              "name": "subagent",
+              "argumentKeys": [
+                "agent",
+                "description",
+                "prompt",
+                "model",
+                "sessionID",
+                "background"
+              ]
+            },
+            {
+              "name": "webfetch",
+              "argumentKeys": [
+                "url",
+                "format",
+                "timeout"
+              ]
+            },
+            {
+              "name": "websearch",
+              "argumentKeys": [
+                "query"
+              ]
+            },
+            {
+              "name": "write",
+              "argumentKeys": [
+                "path",
+                "content"
+              ]
+            },
+            {
+              "name": "execute",
+              "argumentKeys": [
+                "code"
+              ]
+            }
+          ],
+          "toolResultReceived": true,
+          "exactFixtureRead": true
+        }
+      ],
+      "outcome": "PASS",
+      "exitCode": 0,
+      "outputMatched": true,
+      "stderrBytes": 0,
+      "configError": false
+    }
+  },
+  "productionExternalEnabled": false,
+  "productionAgyClientToolsEnabled": false,
+  "traycerValidated": false
+}

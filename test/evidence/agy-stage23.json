@@ -1,0 +1,2116 @@
+{
+  "date": "2026-10-29",
+  "branch": "feat/agy-production-mcp-bridge",
+  "head": "21b85e6977c9d1d01efd208d93376e22dfaee2ce",
+  "agy": {
+    "version": "1.4.10",
+    "sha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+    "model": "gemini-3.8-flash-medium",
+    "node": "v24.19.0",
+    "scope": "Observed Windows binary only; no universal compatibility or containment guarantee"
+  },
+  "productionEnabled": false,
+  "nativeMcp": [
+    {
+      "experiment": "agy-stage23-preQvr",
+      "mode": "same",
+      "result": {
+        "mode": "same",
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "outcome": "BLOCKED",
+        "productionEnabled": false,
+        "sessions": {
+          "A": {
+            "identity": "client:A",
+            "expectedResult": "A_RESULT_10977ad70547452d519696ee",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 33260,
+            "conversationHash": "d3378db270b7eb22d8ec4ca106d7ef13fe34a7b7b481d39df4102940fe1543ce",
+            "ready": true
+          },
+          "B": {
+            "identity": "client:B",
+            "expectedResult": "B_RESULT_77233c98df4fded9188a6dfe",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 21540,
+            "conversationHash": "46d494839354490ed2747f535df48ea7c0419a1ec58773fecb456d35b3da1e41",
+            "ready": true
+          }
+        },
+        "cleaned": true
+      },
+      "events": [
+        {
+          "at": "2026-10-29T21:07:57.043Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:07:57.058Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:07:57.078Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:07:57.078Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:08:01.716Z",
+          "session": "B",
+          "event": "native-init",
+          "conversationHash": "46d494839354490ed2747f535df48ea7c0419a1ec58773fecb456d35b3da1e41"
+        },
+        {
+          "at": "2026-10-29T21:08:02.097Z",
+          "session": "B",
+          "event": "mcp_tools_list",
+          "sessionHash": "348e7bd628905d9055e9d6dc3cae5677dfc906babc598b00fa29134018e945a5",
+          "conversationHash": "46d494839354490ed2747f535df48ea7c0419a1ec58773fecb456d35b3da1e41"
+        },
+        {
+          "at": "2026-10-29T21:08:02.701Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:08:03.109Z",
+          "session": "A",
+          "event": "native-init",
+          "conversationHash": "d3378db270b7eb22d8ec4ca106d7ef13fe34a7b7b481d39df4102940fe1543ce"
+        },
+        {
+          "at": "2026-10-29T21:08:03.112Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:10:03.484Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:10:03.786Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:10:16.776Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:10:16.777Z",
+          "session": "B",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:10:27.020Z",
+          "session": "B",
+          "event": "human-decision",
+          "approved": false
+        },
+        {
+          "at": "2026-10-29T21:10:27.197Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        }
+      ],
+      "workers": [
+        {
+          "at": "2026-10-29T21:08:01.523Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "worker-start",
+          "pid": 14880,
+          "parent": 21540,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:08:01.532Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.534Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.538Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.539Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.829Z",
+          "worker": "7dc4be59-11fc-48f2-820c-4781d17cb0a7",
+          "owner": "A",
+          "event": "worker-start",
+          "pid": 2124,
+          "parent": 33260,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:08:01.840Z",
+          "worker": "7dc4be59-11fc-48f2-820c-4781d17cb0a7",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.843Z",
+          "worker": "7dc4be59-11fc-48f2-820c-4781d17cb0a7",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.845Z",
+          "worker": "7dc4be59-11fc-48f2-820c-4781d17cb0a7",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:01.846Z",
+          "worker": "7dc4be59-11fc-48f2-820c-4781d17cb0a7",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:08:02.105Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "catalog-sent",
+          "catalogHash": "ef91734e8b932f9415b4daf06fe370137732f2fbf393b199ac1f2d8e221a02e6",
+          "names": [
+            "echo_isolation"
+          ]
+        },
+        {
+          "at": "2026-10-29T21:08:02.473Z",
+          "worker": "7dc4be59-11fc-48f2-820c-4781d17cb0a7",
+          "owner": "A",
+          "event": "worker-end"
+        },
+        {
+          "at": "2026-10-29T21:10:30.544Z",
+          "worker": "306e1968-8113-4184-bb98-a8f609334092",
+          "owner": "B",
+          "event": "worker-end"
+        }
+      ]
+    },
+    {
+      "experiment": "agy-stage23-Dp3hXz",
+      "mode": "same",
+      "result": {
+        "mode": "same",
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "outcome": "BLOCKED",
+        "productionEnabled": false,
+        "sessions": {
+          "A": {
+            "identity": "client:A",
+            "expectedResult": "A_RESULT_b231b061c3dc9c19fa1101a9",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 36820,
+            "conversationHash": "bf5b2921ae855b1e954aa71eb60c76fedd6494fcdf1465cdb09467efb7da694c",
+            "ready": true
+          },
+          "B": {
+            "identity": "client:B",
+            "expectedResult": "B_RESULT_b7078d275ada44c002b1a6b0",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 30948,
+            "conversationHash": "435ad3b9723c3cc2c5689bd8a8bfcd71b005ece9a72fec0f3410c4fd6a77b65a",
+            "ready": true
+          }
+        },
+        "cleaned": true
+      },
+      "events": [
+        {
+          "at": "2026-10-29T21:14:16.483Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:14:16.500Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:14:16.913Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:14:17.287Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:14:19.951Z",
+          "session": "A",
+          "event": "native-init",
+          "conversationHash": "bf5b2921ae855b1e954aa71eb60c76fedd6494fcdf1465cdb09467efb7da694c"
+        },
+        {
+          "at": "2026-10-29T21:14:20.509Z",
+          "session": "A",
+          "event": "mcp_worker_attached",
+          "sessionHash": "aca6966caee29069c654e66131714f3a64786c02624f60ff7b1c4712dd113056",
+          "openaiSessionHash": "a481c12a2740ee53905fb6b24ac50ae1a802775d0860f9ded55e8cb2bcb32741",
+          "conversationHash": "bf5b2921ae855b1e954aa71eb60c76fedd6494fcdf1465cdb09467efb7da694c",
+          "processId": 36820,
+          "peerHash": "96ce66d8b06449bff53434ee9bac4c5732ed128e58cd4d3b7ae6a7fe436b9449",
+          "workerPid": 8636
+        },
+        {
+          "at": "2026-10-29T21:14:20.840Z",
+          "session": "B",
+          "event": "mcp_worker_attached",
+          "sessionHash": "988ba0a0eb58fc7c5fd3cb5122e94fd002d3721911e1ab73392a8c0632a9b76a",
+          "openaiSessionHash": "bcf77bc15759336ccdddf3a807d358d76bcd0467e8cf45eae1ebab1ccf0ab911",
+          "conversationHash": null,
+          "processId": 30948,
+          "peerHash": "7c706898a168444f6a2e0240746d4ee3564fed49db399678530a2faf2504e6b4",
+          "workerPid": 44384
+        },
+        {
+          "at": "2026-10-29T21:14:20.841Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:14:21.499Z",
+          "session": "A",
+          "event": "mcp_tools_list",
+          "sessionHash": "aca6966caee29069c654e66131714f3a64786c02624f60ff7b1c4712dd113056",
+          "openaiSessionHash": "a481c12a2740ee53905fb6b24ac50ae1a802775d0860f9ded55e8cb2bcb32741",
+          "conversationHash": "bf5b2921ae855b1e954aa71eb60c76fedd6494fcdf1465cdb09467efb7da694c",
+          "processId": 36820,
+          "peerHash": "96ce66d8b06449bff53434ee9bac4c5732ed128e58cd4d3b7ae6a7fe436b9449",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:14:22.102Z",
+          "session": "B",
+          "event": "native-init",
+          "conversationHash": "435ad3b9723c3cc2c5689bd8a8bfcd71b005ece9a72fec0f3410c4fd6a77b65a"
+        },
+        {
+          "at": "2026-10-29T21:14:22.393Z",
+          "session": "B",
+          "event": "mcp_tools_list",
+          "sessionHash": "988ba0a0eb58fc7c5fd3cb5122e94fd002d3721911e1ab73392a8c0632a9b76a",
+          "openaiSessionHash": "bcf77bc15759336ccdddf3a807d358d76bcd0467e8cf45eae1ebab1ccf0ab911",
+          "conversationHash": "435ad3b9723c3cc2c5689bd8a8bfcd71b005ece9a72fec0f3410c4fd6a77b65a",
+          "processId": 30948,
+          "peerHash": "7c706898a168444f6a2e0240746d4ee3564fed49db399678530a2faf2504e6b4",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:14:22.584Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:16:18.606Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:16:18.877Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:16:23.625Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:16:23.625Z",
+          "session": "A",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:16:25.419Z",
+          "session": "B",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:16:25.419Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:20:23.640Z",
+          "session": "A",
+          "event": "human-decision",
+          "approved": false
+        },
+        {
+          "at": "2026-10-29T21:20:23.641Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:20:25.608Z",
+          "session": "B",
+          "event": "human-decision",
+          "approved": false
+        },
+        {
+          "at": "2026-10-29T21:20:25.609Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:20:28.854Z",
+          "session": "A",
+          "event": "mcp_worker_detached",
+          "sessionHash": "aca6966caee29069c654e66131714f3a64786c02624f60ff7b1c4712dd113056",
+          "openaiSessionHash": "a481c12a2740ee53905fb6b24ac50ae1a802775d0860f9ded55e8cb2bcb32741",
+          "conversationHash": "bf5b2921ae855b1e954aa71eb60c76fedd6494fcdf1465cdb09467efb7da694c",
+          "processId": 36820,
+          "peerHash": "96ce66d8b06449bff53434ee9bac4c5732ed128e58cd4d3b7ae6a7fe436b9449"
+        },
+        {
+          "at": "2026-10-29T21:20:30.413Z",
+          "session": "B",
+          "event": "mcp_worker_detached",
+          "sessionHash": "988ba0a0eb58fc7c5fd3cb5122e94fd002d3721911e1ab73392a8c0632a9b76a",
+          "openaiSessionHash": "bcf77bc15759336ccdddf3a807d358d76bcd0467e8cf45eae1ebab1ccf0ab911",
+          "conversationHash": "435ad3b9723c3cc2c5689bd8a8bfcd71b005ece9a72fec0f3410c4fd6a77b65a",
+          "processId": 30948,
+          "peerHash": "7c706898a168444f6a2e0240746d4ee3564fed49db399678530a2faf2504e6b4"
+        }
+      ],
+      "workers": [
+        {
+          "at": "2026-10-29T21:14:19.772Z",
+          "worker": "a1926c43-8062-433f-9326-542406253017",
+          "owner": "A",
+          "event": "worker-start",
+          "pid": 8636,
+          "parent": 36820,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:14:19.780Z",
+          "worker": "a1926c43-8062-433f-9326-542406253017",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:19.782Z",
+          "worker": "a1926c43-8062-433f-9326-542406253017",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:20.345Z",
+          "worker": "414d9bee-420e-4312-9341-c719be44dac2",
+          "owner": "B",
+          "event": "worker-start",
+          "pid": 44384,
+          "parent": 30948,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:14:20.353Z",
+          "worker": "414d9bee-420e-4312-9341-c719be44dac2",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:20.355Z",
+          "worker": "414d9bee-420e-4312-9341-c719be44dac2",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:20.516Z",
+          "worker": "a1926c43-8062-433f-9326-542406253017",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:20.517Z",
+          "worker": "a1926c43-8062-433f-9326-542406253017",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:20.847Z",
+          "worker": "414d9bee-420e-4312-9341-c719be44dac2",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:20.848Z",
+          "worker": "414d9bee-420e-4312-9341-c719be44dac2",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:14:21.502Z",
+          "worker": "a1926c43-8062-433f-9326-542406253017",
+          "owner": "A",
+          "event": "catalog-sent",
+          "catalogHash": "df2e7686a437a89af90c00eec1fea60ff4cd666b97b3878eb02ae3bca08f11d1",
+          "names": [
+            "echo_isolation"
+          ]
+        },
+        {
+          "at": "2026-10-29T21:14:22.395Z",
+          "worker": "414d9bee-420e-4312-9341-c719be44dac2",
+          "owner": "B",
+          "event": "catalog-sent",
+          "catalogHash": "ef91734e8b932f9415b4daf06fe370137732f2fbf393b199ac1f2d8e221a02e6",
+          "names": [
+            "echo_isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "experiment": "agy-stage23-XCZZXo",
+      "mode": "different-discovery",
+      "result": {
+        "mode": "different-discovery",
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "outcome": "DISCOVERY_ONLY",
+        "productionEnabled": false,
+        "sessions": {
+          "A": {
+            "identity": "client:A",
+            "expectedResult": "A_RESULT_e65d1de72695929869130507",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 29528,
+            "conversationHash": "6d92e30a6392a27d77bf13ce6a1e9525607764c5791bc175490b9142a5f4d31a",
+            "catalogListed": true,
+            "errorCode": "cancelled"
+          },
+          "B": {
+            "identity": "client:B",
+            "expectedResult": "B_RESULT_d0cc9b2c554bafc23fe3fbbd",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 23660,
+            "conversationHash": "802c269dbaf432d7545eb8933bc993190efebd85cc51cc17db80ecf4c0140c74",
+            "catalogListed": true,
+            "errorCode": "cancelled"
+          }
+        },
+        "cleaned": true
+      },
+      "events": [
+        {
+          "at": "2026-10-29T21:22:20.668Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:22:20.683Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:22:21.000Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:22:21.325Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:22:24.439Z",
+          "session": "A",
+          "event": "native-init",
+          "conversationHash": "6d92e30a6392a27d77bf13ce6a1e9525607764c5791bc175490b9142a5f4d31a"
+        },
+        {
+          "at": "2026-10-29T21:22:25.300Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:22:25.606Z",
+          "session": "B",
+          "event": "native-init",
+          "conversationHash": "802c269dbaf432d7545eb8933bc993190efebd85cc51cc17db80ecf4c0140c74"
+        },
+        {
+          "at": "2026-10-29T21:22:25.608Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:22:26.035Z",
+          "session": "A",
+          "event": "mcp_worker_attached",
+          "sessionHash": "9422aab5347260602d5e8d176a03a59cbb24f9c3ae003187b7ead512570fc528",
+          "openaiSessionHash": "269a2e2c73844b4f82ee1b8d20c7499a90bfe01a52437e540488195f1b266e14",
+          "conversationHash": "6d92e30a6392a27d77bf13ce6a1e9525607764c5791bc175490b9142a5f4d31a",
+          "processId": 29528,
+          "peerHash": "999cc89d64de871103357bbd64c40df43e6e0daaff6bdc7058ba4ed1a02c83be",
+          "workerPid": 26684
+        },
+        {
+          "at": "2026-10-29T21:22:26.324Z",
+          "session": "B",
+          "event": "mcp_worker_attached",
+          "sessionHash": "4c6ba2afcf6c93311012c7c35ca8a13f764b518955231bcc5ee64761a1741435",
+          "openaiSessionHash": "6c5a2d22c4ca4bf6b9404711563083ef9ae1e87e41069aba161361a78dbc3a5b",
+          "conversationHash": "802c269dbaf432d7545eb8933bc993190efebd85cc51cc17db80ecf4c0140c74",
+          "processId": 23660,
+          "peerHash": "a7e9734fbc24545e0196f38250c7ff915808f95b07120f97653d97c70e8b19f2",
+          "workerPid": 32308
+        },
+        {
+          "at": "2026-10-29T21:22:27.989Z",
+          "session": "A",
+          "event": "mcp_tools_list",
+          "sessionHash": "9422aab5347260602d5e8d176a03a59cbb24f9c3ae003187b7ead512570fc528",
+          "openaiSessionHash": "269a2e2c73844b4f82ee1b8d20c7499a90bfe01a52437e540488195f1b266e14",
+          "conversationHash": "6d92e30a6392a27d77bf13ce6a1e9525607764c5791bc175490b9142a5f4d31a",
+          "processId": 29528,
+          "peerHash": "999cc89d64de871103357bbd64c40df43e6e0daaff6bdc7058ba4ed1a02c83be",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:22:28.616Z",
+          "session": "B",
+          "event": "mcp_tools_list",
+          "sessionHash": "4c6ba2afcf6c93311012c7c35ca8a13f764b518955231bcc5ee64761a1741435",
+          "openaiSessionHash": "6c5a2d22c4ca4bf6b9404711563083ef9ae1e87e41069aba161361a78dbc3a5b",
+          "conversationHash": "802c269dbaf432d7545eb8933bc993190efebd85cc51cc17db80ecf4c0140c74",
+          "processId": 23660,
+          "peerHash": "a7e9734fbc24545e0196f38250c7ff915808f95b07120f97653d97c70e8b19f2",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        }
+      ],
+      "workers": [
+        {
+          "at": "2026-10-29T21:22:24.306Z",
+          "worker": "ab4bf565-9fdf-41d5-bf51-e906a011e35d",
+          "owner": "A",
+          "event": "worker-start",
+          "pid": 26684,
+          "parent": 29528,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:22:24.316Z",
+          "worker": "ab4bf565-9fdf-41d5-bf51-e906a011e35d",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:24.318Z",
+          "worker": "ab4bf565-9fdf-41d5-bf51-e906a011e35d",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:24.360Z",
+          "worker": "1cec901f-f8b1-4255-83c9-a595eb92dcae",
+          "owner": "B",
+          "event": "worker-start",
+          "pid": 32308,
+          "parent": 23660,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:22:24.371Z",
+          "worker": "1cec901f-f8b1-4255-83c9-a595eb92dcae",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:24.374Z",
+          "worker": "1cec901f-f8b1-4255-83c9-a595eb92dcae",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:26.044Z",
+          "worker": "ab4bf565-9fdf-41d5-bf51-e906a011e35d",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:26.044Z",
+          "worker": "ab4bf565-9fdf-41d5-bf51-e906a011e35d",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:26.334Z",
+          "worker": "1cec901f-f8b1-4255-83c9-a595eb92dcae",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:26.335Z",
+          "worker": "1cec901f-f8b1-4255-83c9-a595eb92dcae",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:22:27.992Z",
+          "worker": "ab4bf565-9fdf-41d5-bf51-e906a011e35d",
+          "owner": "A",
+          "event": "catalog-sent",
+          "catalogHash": "df2e7686a437a89af90c00eec1fea60ff4cd666b97b3878eb02ae3bca08f11d1",
+          "names": [
+            "echo_isolation"
+          ]
+        },
+        {
+          "at": "2026-10-29T21:22:28.618Z",
+          "worker": "1cec901f-f8b1-4255-83c9-a595eb92dcae",
+          "owner": "B",
+          "event": "catalog-sent",
+          "catalogHash": "ef91734e8b932f9415b4daf06fe370137732f2fbf393b199ac1f2d8e221a02e6",
+          "names": [
+            "echo_isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "experiment": "agy-stage23-8iLku7",
+      "mode": "same-discovery",
+      "result": {
+        "mode": "same-discovery",
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "outcome": "DISCOVERY_ONLY",
+        "productionEnabled": false,
+        "sessions": {
+          "A": {
+            "identity": "client:A",
+            "expectedResult": "A_RESULT_45579eb43b31dfe20778c877",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 10352,
+            "conversationHash": "e95010839aa0b310943d509962055601265a61e31d7a5f38c57b4854640df737",
+            "catalogListed": true,
+            "errorCode": "cancelled"
+          },
+          "B": {
+            "identity": "client:B",
+            "expectedResult": "B_RESULT_0f33de2b8c6e155c2ce9cb66",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 45096,
+            "conversationHash": "ff5d283c4abf56036fa1ee9870ca7d011fc57aa12bb196238bd9a3c70ebaa9c7",
+            "catalogListed": true,
+            "errorCode": "cancelled"
+          }
+        },
+        "cleaned": true
+      },
+      "events": [
+        {
+          "at": "2026-10-29T21:23:28.526Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:23:28.548Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:23:29.156Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:23:28.855Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:23:31.713Z",
+          "session": "B",
+          "event": "native-init",
+          "conversationHash": "ff5d283c4abf56036fa1ee9870ca7d011fc57aa12bb196238bd9a3c70ebaa9c7"
+        },
+        {
+          "at": "2026-10-29T21:23:32.626Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:23:32.970Z",
+          "session": "A",
+          "event": "native-init",
+          "conversationHash": "e95010839aa0b310943d509962055601265a61e31d7a5f38c57b4854640df737"
+        },
+        {
+          "at": "2026-10-29T21:23:33.337Z",
+          "session": "B",
+          "event": "mcp_worker_attached",
+          "sessionHash": "9e34dc6fe7a17f8770deddb8556c1f851aedfa2aa9678b304d18cd721b172f40",
+          "openaiSessionHash": "8f3ae94c2be5ab933452c7b45db324f22036dc258479e1ea56cb5dc378216083",
+          "conversationHash": "ff5d283c4abf56036fa1ee9870ca7d011fc57aa12bb196238bd9a3c70ebaa9c7",
+          "processId": 45096,
+          "peerHash": "cc32d66b1d9408bfab05d21ac5f1ff06b86839d2fd0686fd17d783d44aedd723",
+          "workerPid": 26412
+        },
+        {
+          "at": "2026-10-29T21:23:33.647Z",
+          "session": "A",
+          "event": "mcp_worker_attached",
+          "sessionHash": "45ba1531b798b5641760fd6127a681e2f0c7b7a14e08f4a6999da2349b0ed1e0",
+          "openaiSessionHash": "0e9dabfd4d8e1d77db32ee8cbf6eedc42e624d33230b413432e4a2a3170b7cc4",
+          "conversationHash": "e95010839aa0b310943d509962055601265a61e31d7a5f38c57b4854640df737",
+          "processId": 10352,
+          "peerHash": "b91b2edd81d60d26856c5f9690c374fe77a424cc52c824131b7dd702152beb00",
+          "workerPid": 44252
+        },
+        {
+          "at": "2026-10-29T21:23:34.252Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:23:35.407Z",
+          "session": "B",
+          "event": "mcp_tools_list",
+          "sessionHash": "9e34dc6fe7a17f8770deddb8556c1f851aedfa2aa9678b304d18cd721b172f40",
+          "openaiSessionHash": "8f3ae94c2be5ab933452c7b45db324f22036dc258479e1ea56cb5dc378216083",
+          "conversationHash": "ff5d283c4abf56036fa1ee9870ca7d011fc57aa12bb196238bd9a3c70ebaa9c7",
+          "processId": 45096,
+          "peerHash": "cc32d66b1d9408bfab05d21ac5f1ff06b86839d2fd0686fd17d783d44aedd723",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:23:35.831Z",
+          "session": "A",
+          "event": "mcp_tools_list",
+          "sessionHash": "45ba1531b798b5641760fd6127a681e2f0c7b7a14e08f4a6999da2349b0ed1e0",
+          "openaiSessionHash": "0e9dabfd4d8e1d77db32ee8cbf6eedc42e624d33230b413432e4a2a3170b7cc4",
+          "conversationHash": "e95010839aa0b310943d509962055601265a61e31d7a5f38c57b4854640df737",
+          "processId": 10352,
+          "peerHash": "b91b2edd81d60d26856c5f9690c374fe77a424cc52c824131b7dd702152beb00",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        }
+      ],
+      "workers": [
+        {
+          "at": "2026-10-29T21:23:31.513Z",
+          "worker": "8937ab4d-7d3e-40f1-8a11-06179557ebd9",
+          "owner": "B",
+          "event": "worker-start",
+          "pid": 26412,
+          "parent": 45096,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:23:31.526Z",
+          "worker": "8937ab4d-7d3e-40f1-8a11-06179557ebd9",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:31.529Z",
+          "worker": "8937ab4d-7d3e-40f1-8a11-06179557ebd9",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:31.578Z",
+          "worker": "fd0f78f3-0f3c-4d88-8a29-df4c1a423aed",
+          "owner": "A",
+          "event": "worker-start",
+          "pid": 44252,
+          "parent": 10352,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:23:31.587Z",
+          "worker": "fd0f78f3-0f3c-4d88-8a29-df4c1a423aed",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:31.590Z",
+          "worker": "fd0f78f3-0f3c-4d88-8a29-df4c1a423aed",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:33.346Z",
+          "worker": "8937ab4d-7d3e-40f1-8a11-06179557ebd9",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:33.347Z",
+          "worker": "8937ab4d-7d3e-40f1-8a11-06179557ebd9",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:33.654Z",
+          "worker": "fd0f78f3-0f3c-4d88-8a29-df4c1a423aed",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:33.655Z",
+          "worker": "fd0f78f3-0f3c-4d88-8a29-df4c1a423aed",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:23:35.409Z",
+          "worker": "8937ab4d-7d3e-40f1-8a11-06179557ebd9",
+          "owner": "B",
+          "event": "catalog-sent",
+          "catalogHash": "ef91734e8b932f9415b4daf06fe370137732f2fbf393b199ac1f2d8e221a02e6",
+          "names": [
+            "echo_isolation"
+          ]
+        },
+        {
+          "at": "2026-10-29T21:23:35.832Z",
+          "worker": "fd0f78f3-0f3c-4d88-8a29-df4c1a423aed",
+          "owner": "A",
+          "event": "catalog-sent",
+          "catalogHash": "df2e7686a437a89af90c00eec1fea60ff4cd666b97b3878eb02ae3bca08f11d1",
+          "names": [
+            "echo_isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "experiment": "agy-stage23-tcaydG",
+      "mode": "same",
+      "result": {
+        "mode": "same",
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "outcome": "BLOCKED",
+        "productionEnabled": false,
+        "sessions": {
+          "A": {
+            "identity": "client:A",
+            "expectedResult": "A_RESULT_5869ba2ace42c593ab26e528",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 32592,
+            "conversationHash": "0762f2f73b13b665f523dadbcaf5e7604ec72d7cc5b3b291a24d9c44043473df",
+            "catalogListed": true,
+            "ready": true
+          },
+          "B": {
+            "identity": "client:B",
+            "expectedResult": "B_RESULT_f4f5cde0f3237ce07971ba53",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 13364,
+            "conversationHash": "f63e274653886fa6e8aa1e04c60302ce1b2568d62097fb2fcb9a56ceba151733",
+            "catalogListed": true,
+            "ready": true
+          }
+        },
+        "cleaned": true
+      },
+      "events": [
+        {
+          "at": "2026-10-29T21:37:40.546Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:37:40.562Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:37:41.657Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:37:41.322Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:37:45.690Z",
+          "session": "A",
+          "event": "native-init",
+          "conversationHash": "0762f2f73b13b665f523dadbcaf5e7604ec72d7cc5b3b291a24d9c44043473df"
+        },
+        {
+          "at": "2026-10-29T21:37:46.023Z",
+          "session": "B",
+          "event": "native-init",
+          "conversationHash": "f63e274653886fa6e8aa1e04c60302ce1b2568d62097fb2fcb9a56ceba151733"
+        },
+        {
+          "at": "2026-10-29T21:37:46.231Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:37:46.232Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:37:48.692Z",
+          "session": "A",
+          "event": "mcp_worker_attached",
+          "sessionHash": "d9c3f56e14b889f023977816a62ce50b95653337363dfd73fbe7ed2a21c171f2",
+          "openaiSessionHash": "dbdc1176671c3a7f5a9d8a0e9c8a2b6aef7ee75492b295bc1c759a484fced4e2",
+          "conversationHash": "0762f2f73b13b665f523dadbcaf5e7604ec72d7cc5b3b291a24d9c44043473df",
+          "processId": 32592,
+          "peerHash": "aa5ecbbe077d29d6c2cf1f927e8320d6c8e522901f9f7920c2f97d5025d59080",
+          "workerPid": 47740
+        },
+        {
+          "at": "2026-10-29T21:37:49.015Z",
+          "session": "B",
+          "event": "mcp_worker_attached",
+          "sessionHash": "70fe59a71149c56a6194ecab4858510943cfea743ee74f9e50b49964cff3954a",
+          "openaiSessionHash": "97b2716717e94b6be13b7d1f10ae071054dead0793fac08a924bd899ceaf0ba0",
+          "conversationHash": "f63e274653886fa6e8aa1e04c60302ce1b2568d62097fb2fcb9a56ceba151733",
+          "processId": 13364,
+          "peerHash": "69aa4c5b5a42a879fc87ed227554d15cdd034d0472a592c634d820445a90fa1b",
+          "workerPid": 28092
+        },
+        {
+          "at": "2026-10-29T21:37:50.780Z",
+          "session": "A",
+          "event": "mcp_tools_list",
+          "sessionHash": "d9c3f56e14b889f023977816a62ce50b95653337363dfd73fbe7ed2a21c171f2",
+          "openaiSessionHash": "dbdc1176671c3a7f5a9d8a0e9c8a2b6aef7ee75492b295bc1c759a484fced4e2",
+          "conversationHash": "0762f2f73b13b665f523dadbcaf5e7604ec72d7cc5b3b291a24d9c44043473df",
+          "processId": 32592,
+          "peerHash": "aa5ecbbe077d29d6c2cf1f927e8320d6c8e522901f9f7920c2f97d5025d59080",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:37:51.557Z",
+          "session": "B",
+          "event": "mcp_tools_list",
+          "sessionHash": "70fe59a71149c56a6194ecab4858510943cfea743ee74f9e50b49964cff3954a",
+          "openaiSessionHash": "97b2716717e94b6be13b7d1f10ae071054dead0793fac08a924bd899ceaf0ba0",
+          "conversationHash": "f63e274653886fa6e8aa1e04c60302ce1b2568d62097fb2fcb9a56ceba151733",
+          "processId": 13364,
+          "peerHash": "69aa4c5b5a42a879fc87ed227554d15cdd034d0472a592c634d820445a90fa1b",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:39:44.187Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:39:44.491Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:39:49.787Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:39:49.788Z",
+          "session": "A",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:39:50.982Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:39:50.983Z",
+          "session": "B",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:40:12.799Z",
+          "session": "A",
+          "event": "human-decision",
+          "approved": false
+        },
+        {
+          "at": "2026-10-29T21:40:12.800Z",
+          "session": "B",
+          "event": "human-decision",
+          "approved": false
+        },
+        {
+          "at": "2026-10-29T21:40:12.801Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:40:13.080Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        }
+      ],
+      "workers": [
+        {
+          "at": "2026-10-29T21:37:45.528Z",
+          "worker": "528fd09f-4f29-41c2-abcd-d859f4473879",
+          "owner": "B",
+          "event": "worker-start",
+          "pid": 28092,
+          "parent": 13364,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:37:45.528Z",
+          "worker": "ea97d4a9-1687-4809-8b24-d15d5aa24878",
+          "owner": "A",
+          "event": "worker-start",
+          "pid": 47740,
+          "parent": 32592,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:37:45.537Z",
+          "worker": "528fd09f-4f29-41c2-abcd-d859f4473879",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:45.537Z",
+          "worker": "ea97d4a9-1687-4809-8b24-d15d5aa24878",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:46.187Z",
+          "worker": "528fd09f-4f29-41c2-abcd-d859f4473879",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:46.210Z",
+          "worker": "ea97d4a9-1687-4809-8b24-d15d5aa24878",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:48.703Z",
+          "worker": "ea97d4a9-1687-4809-8b24-d15d5aa24878",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:48.704Z",
+          "worker": "ea97d4a9-1687-4809-8b24-d15d5aa24878",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:49.021Z",
+          "worker": "528fd09f-4f29-41c2-abcd-d859f4473879",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:49.022Z",
+          "worker": "528fd09f-4f29-41c2-abcd-d859f4473879",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:37:50.783Z",
+          "worker": "ea97d4a9-1687-4809-8b24-d15d5aa24878",
+          "owner": "A",
+          "event": "catalog-sent",
+          "catalogHash": "df2e7686a437a89af90c00eec1fea60ff4cd666b97b3878eb02ae3bca08f11d1",
+          "names": [
+            "echo_isolation"
+          ]
+        },
+        {
+          "at": "2026-10-29T21:37:51.562Z",
+          "worker": "528fd09f-4f29-41c2-abcd-d859f4473879",
+          "owner": "B",
+          "event": "catalog-sent",
+          "catalogHash": "ef91734e8b932f9415b4daf06fe370137732f2fbf393b199ac1f2d8e221a02e6",
+          "names": [
+            "echo_isolation"
+          ]
+        }
+      ]
+    },
+    {
+      "experiment": "agy-stage23-PKzLJD",
+      "mode": "same",
+      "events": [
+        {
+          "at": "2026-10-29T21:40:30.788Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:40:30.812Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "spawning"
+        },
+        {
+          "at": "2026-10-29T21:40:31.433Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:40:31.130Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "initializing"
+        },
+        {
+          "at": "2026-10-29T21:40:33.864Z",
+          "session": "B",
+          "event": "native-init",
+          "conversationHash": "17b34c1512e796896202b0668040f278a94d4e7f0371110fbb06117e25d30f68"
+        },
+        {
+          "at": "2026-10-29T21:40:34.740Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:40:35.087Z",
+          "session": "A",
+          "event": "native-init",
+          "conversationHash": "9b0d452cbc44ca61032756ef37fee9cbb236affa3e8f5e24606bdf256165d4b2"
+        },
+        {
+          "at": "2026-10-29T21:40:35.404Z",
+          "session": "B",
+          "event": "mcp_worker_attached",
+          "sessionHash": "e84e320584afb56e4120d7b517bff7babef5808633795c25709e5fdda431c331",
+          "openaiSessionHash": "741baf4aeb6087af939fa31cb22acaf6a2f527bfa527ed3d605a12c78ac8cb0e",
+          "conversationHash": "17b34c1512e796896202b0668040f278a94d4e7f0371110fbb06117e25d30f68",
+          "processId": 33284,
+          "peerHash": "aeff68a129b1c61fadc8d32a2f26fbf240f32497060c2665d9d6feb3392c0173",
+          "workerPid": 43948
+        },
+        {
+          "at": "2026-10-29T21:40:35.412Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "attesting"
+        },
+        {
+          "at": "2026-10-29T21:40:36.381Z",
+          "session": "A",
+          "event": "mcp_worker_attached",
+          "sessionHash": "f859fad165cc62350adf0ff1c01fc8ca2b01e67c4a839a431e7517b4fa95cf83",
+          "openaiSessionHash": "79d70d2c8c39178810ba67b2b96fe5ad85ab1f1b9c6170684d0ad79e6f51f4ea",
+          "conversationHash": "9b0d452cbc44ca61032756ef37fee9cbb236affa3e8f5e24606bdf256165d4b2",
+          "processId": 26080,
+          "peerHash": "326cd32eb655253b325ed3bea0681ceffefea989694f19b6aeae4cd8e2e13972",
+          "workerPid": 27072
+        },
+        {
+          "at": "2026-10-29T21:40:37.507Z",
+          "session": "B",
+          "event": "mcp_tools_list",
+          "sessionHash": "e84e320584afb56e4120d7b517bff7babef5808633795c25709e5fdda431c331",
+          "openaiSessionHash": "741baf4aeb6087af939fa31cb22acaf6a2f527bfa527ed3d605a12c78ac8cb0e",
+          "conversationHash": "17b34c1512e796896202b0668040f278a94d4e7f0371110fbb06117e25d30f68",
+          "processId": 33284,
+          "peerHash": "aeff68a129b1c61fadc8d32a2f26fbf240f32497060c2665d9d6feb3392c0173",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:40:38.211Z",
+          "session": "A",
+          "event": "mcp_tools_list",
+          "sessionHash": "f859fad165cc62350adf0ff1c01fc8ca2b01e67c4a839a431e7517b4fa95cf83",
+          "openaiSessionHash": "79d70d2c8c39178810ba67b2b96fe5ad85ab1f1b9c6170684d0ad79e6f51f4ea",
+          "conversationHash": "9b0d452cbc44ca61032756ef37fee9cbb236affa3e8f5e24606bdf256165d4b2",
+          "processId": 26080,
+          "peerHash": "326cd32eb655253b325ed3bea0681ceffefea989694f19b6aeae4cd8e2e13972",
+          "rpcHash": "b5de1d2445d62d9b071214d68e3d35a786b18e06ebf92bcb85e242edde486cb7"
+        },
+        {
+          "at": "2026-10-29T21:42:32.834Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:42:33.398Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "active"
+        },
+        {
+          "at": "2026-10-29T21:42:37.270Z",
+          "session": "A",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:42:37.270Z",
+          "session": "A",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:42:39.106Z",
+          "session": "B",
+          "event": "phase",
+          "phase": "waiting_approval"
+        },
+        {
+          "at": "2026-10-29T21:42:39.106Z",
+          "session": "B",
+          "event": "approval-pending",
+          "actionHash": "0c50c40397d5affdeebfb39ee80c0b60688e2827e7eed382e738a3c376eb5e1a"
+        },
+        {
+          "at": "2026-10-29T21:47:49.825Z",
+          "session": "B",
+          "event": "mcp_worker_detached",
+          "sessionHash": "e84e320584afb56e4120d7b517bff7babef5808633795c25709e5fdda431c331",
+          "openaiSessionHash": "741baf4aeb6087af939fa31cb22acaf6a2f527bfa527ed3d605a12c78ac8cb0e",
+          "conversationHash": "17b34c1512e796896202b0668040f278a94d4e7f0371110fbb06117e25d30f68",
+          "processId": 33284,
+          "peerHash": "aeff68a129b1c61fadc8d32a2f26fbf240f32497060c2665d9d6feb3392c0173"
+        },
+        {
+          "at": "2026-10-29T21:48:05.831Z",
+          "session": "A",
+          "event": "mcp_worker_detached",
+          "sessionHash": "f859fad165cc62350adf0ff1c01fc8ca2b01e67c4a839a431e7517b4fa95cf83",
+          "openaiSessionHash": "79d70d2c8c39178810ba67b2b96fe5ad85ab1f1b9c6170684d0ad79e6f51f4ea",
+          "conversationHash": "9b0d452cbc44ca61032756ef37fee9cbb236affa3e8f5e24606bdf256165d4b2",
+          "processId": 26080,
+          "peerHash": "326cd32eb655253b325ed3bea0681ceffefea989694f19b6aeae4cd8e2e13972"
+        }
+      ],
+      "workers": [
+        {
+          "at": "2026-10-29T21:40:33.681Z",
+          "worker": "9f98c189-68d3-4a27-9ecb-03db1ddf3b1b",
+          "owner": "B",
+          "event": "worker-start",
+          "pid": 43948,
+          "parent": 33284,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:40:33.690Z",
+          "worker": "9f98c189-68d3-4a27-9ecb-03db1ddf3b1b",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:33.692Z",
+          "worker": "9f98c189-68d3-4a27-9ecb-03db1ddf3b1b",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:33.900Z",
+          "worker": "ba2b1232-b4a2-4ddf-8b38-6a7777e7c7a9",
+          "owner": "A",
+          "event": "worker-start",
+          "pid": 27072,
+          "parent": 26080,
+          "credentialPresent": true
+        },
+        {
+          "at": "2026-10-29T21:40:33.912Z",
+          "worker": "ba2b1232-b4a2-4ddf-8b38-6a7777e7c7a9",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "server/discover",
+          "idHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "paramKeys": [
+            "_meta"
+          ],
+          "metaKeys": [
+            "io.modelcontextprotocol/clientCapabilities",
+            "io.modelcontextprotocol/clientInfo",
+            "io.modelcontextprotocol/protocolVersion"
+          ],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:33.915Z",
+          "worker": "ba2b1232-b4a2-4ddf-8b38-6a7777e7c7a9",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "initialize",
+          "idHash": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "paramKeys": [
+            "clientInfo",
+            "protocolVersion",
+            "capabilities"
+          ],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:35.420Z",
+          "worker": "9f98c189-68d3-4a27-9ecb-03db1ddf3b1b",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:35.421Z",
+          "worker": "9f98c189-68d3-4a27-9ecb-03db1ddf3b1b",
+          "owner": "B",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:36.390Z",
+          "worker": "ba2b1232-b4a2-4ddf-8b38-6a7777e7c7a9",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "notifications/initialized",
+          "idHash": null,
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:36.391Z",
+          "worker": "ba2b1232-b4a2-4ddf-8b38-6a7777e7c7a9",
+          "owner": "A",
+          "event": "mcp-input",
+          "method": "tools/list",
+          "idHash": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+          "paramKeys": [],
+          "metaKeys": [],
+          "nativeIdentityPresent": false
+        },
+        {
+          "at": "2026-10-29T21:40:37.512Z",
+          "worker": "9f98c189-68d3-4a27-9ecb-03db1ddf3b1b",
+          "owner": "B",
+          "event": "catalog-sent",
+          "catalogHash": "ef91734e8b932f9415b4daf06fe370137732f2fbf393b199ac1f2d8e221a02e6",
+          "names": [
+            "echo_isolation"
+          ]
+        },
+        {
+          "at": "2026-10-29T21:40:38.215Z",
+          "worker": "ba2b1232-b4a2-4ddf-8b38-6a7777e7c7a9",
+          "owner": "A",
+          "event": "catalog-sent",
+          "catalogHash": "df2e7686a437a89af90c00eec1fea60ff4cd666b97b3878eb02ae3bca08f11d1",
+          "names": [
+            "echo_isolation"
+          ]
+        }
+      ],
+      "result": {
+        "mode": "same",
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "outcome": "BLOCKED",
+        "productionEnabled": false,
+        "sessions": {
+          "A": {
+            "identity": "client:A",
+            "expectedResult": "A_RESULT_5d964a4d2b9f9603bc8dc7ad",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 26080,
+            "conversationHash": "9b0d452cbc44ca61032756ef37fee9cbb236affa3e8f5e24606bdf256165d4b2",
+            "catalogListed": true,
+            "ready": true
+          },
+          "B": {
+            "identity": "client:B",
+            "expectedResult": "B_RESULT_b18e49e00d0c05a99546de33",
+            "init": true,
+            "humanApproved": false,
+            "pending": false,
+            "receivedOwnResult": false,
+            "receivedForeignResult": false,
+            "agyPid": 33284,
+            "conversationHash": "17b34c1512e796896202b0668040f278a94d4e7f0371110fbb06117e25d30f68",
+            "catalogListed": true,
+            "ready": true
+          }
+        },
+        "cleaned": true
+      }
+    }
+  ],
+  "hookBoundary": [
+    {
+      "experiment": "agy-stage23-hook-GM5RGh",
+      "result": {
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "cases": {
+          "deny": {
+            "expectedReadObserved": false,
+            "contentReceived": false,
+            "resultSuccess": true,
+            "conversationHash": "80f9ca30dc63b835bce8ff8d1b641ec6bcebf61dd2180e931c6a211c923a6e00",
+            "exit": {
+              "code": 0
+            },
+            "versions": [
+              "1.4.10"
+            ],
+            "denied": false
+          },
+          "exit-error": {
+            "expectedReadObserved": false,
+            "contentReceived": false,
+            "resultSuccess": true,
+            "conversationHash": "ee3fab5fe5b8187f3516b62d6a50c286ca5267069d5b4afdd1740d99c13981c9",
+            "exit": {
+              "code": 0
+            },
+            "versions": [
+              "1.4.10"
+            ],
+            "denied": false
+          },
+          "invalid-json": {
+            "expectedReadObserved": false,
+            "contentReceived": false,
+            "resultSuccess": true,
+            "conversationHash": "20127288ebb4dd6aba05c45b0810b2f50ee0032efbef9eb6c3384cc2592bf833",
+            "exit": {
+              "code": 0
+            },
+            "versions": [
+              "1.4.10"
+            ],
+            "denied": false
+          }
+        }
+      },
+      "temporaryHookConfigurationRemoved": true
+    },
+    {
+      "experiment": "agy-stage23-hook-kblfct",
+      "result": {
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "cases": {
+          "deny": {
+            "expectedReadObserved": true,
+            "contentReceived": false,
+            "resultSuccess": true,
+            "eventCounts": {
+              "init": 1,
+              "step_update": 6,
+              "result": 1
+            },
+            "stepTypes": [
+              "user_input",
+              "agent_response",
+              "tool"
+            ],
+            "conversationHash": "d092f81e73e6c7f0e3087f738de07ed1356e94861e0e78da8129624280c0f9ac",
+            "cwdMatches": true,
+            "readToolAdvertised": true,
+            "toolState": "ERROR",
+            "responseBytes": 227,
+            "responseFlags": {
+              "denial": true,
+              "unavailable": false
+            },
+            "exit": {
+              "code": 0
+            },
+            "versions": [
+              "1.4.10"
+            ],
+            "hookConfigCounts": [
+              "1/1"
+            ],
+            "hookFailureDiagnostic": false,
+            "denied": true
+          },
+          "invalid-json": {
+            "expectedReadObserved": true,
+            "contentReceived": false,
+            "resultSuccess": true,
+            "eventCounts": {
+              "init": 1,
+              "step_update": 12,
+              "result": 1
+            },
+            "stepTypes": [
+              "user_input",
+              "agent_response",
+              "tool"
+            ],
+            "conversationHash": "c3457e17382d20142d17a245cfd930062ef10c6848bac42e45c949f083deaa20",
+            "cwdMatches": true,
+            "readToolAdvertised": true,
+            "toolState": "ERROR",
+            "responseBytes": 559,
+            "responseFlags": {
+              "denial": false,
+              "unavailable": false
+            },
+            "exit": {
+              "code": 0
+            },
+            "versions": [
+              "1.4.10"
+            ],
+            "hookConfigCounts": [
+              "1/1"
+            ],
+            "hookFailureDiagnostic": false,
+            "denied": true
+          }
+        }
+      },
+      "temporaryHookConfigurationRemoved": true
+    },
+    {
+      "experiment": "agy-stage23-hook-lYxcgt",
+      "result": {
+        "root": "<EXPERIMENT>",
+        "binarySha256": "fade3d94282b8c1b12a24e54ffa930183bd6f6ff7a73a90421fb0aab4d9402ba",
+        "cases": {
+          "exit-error": {
+            "expectedReadObserved": true,
+            "contentReceived": false,
+            "resultSuccess": true,
+            "eventCounts": {
+              "init": 1,
+              "step_update": 14,
+              "result": 1
+            },
+            "stepTypes": [
+              "user_input",
+              "agent_response",
+              "tool"
+            ],
+            "conversationHash": "28fbfec8790b83bf3d624142a57f43ee1357d796a732f5291bf1016748fbaf41",
+            "cwdMatches": true,
+            "readToolAdvertised": true,
+            "toolState": "ERROR",
+            "responseBytes": 713,
+            "responseFlags": {
+              "denial": true,
+              "unavailable": false
+            },
+            "exit": {
+              "code": 0
+            },
+            "versions": [
+              "1.4.10"
+            ],
+            "hookConfigCounts": [
+              "1/1"
+            ],
+            "hookFailureDiagnostic": true,
+            "denied": true
+          }
+        }
+      },
+      "temporaryHookConfigurationRemoved": true
+    }
+  ],
+  "notes": {
+    "agy-stage23-preQvr": "Baseline discovery race: tools/list preceded stdout init in A; no positive call.",
+    "agy-stage23-Dp3hXz": "Human question expired; subsequent human reply was not applied to ended conversations.",
+    "agy-stage23-XCZZXo": "Different-workspace discovery only with default OS process witness.",
+    "agy-stage23-8iLku7": "Same-workspace discovery only with default OS process witness.",
+    "agy-stage23-tcaydG": "Invalidated: handler rebuilt while probe was pending. Both actions denied; excluded from positive evidence.",
+    "agy-stage23-PKzLJD": "Both native conversations ended without a positive human decision; no tools/call/client call/result. Native cause of ending before the configured human callback deadline unproven. Managed hook/MCP configs and private leases removed. Remaining probe-only callback timer terminated after cleanup; no authorization reused.",
+    "agy-stage23-hook-GM5RGh": "Inconclusive: no actual protected read observed.",
+    "agy-stage23-hook-kblfct": "Observed deny and malformed JSON hook outcomes, no protected read contents returned.",
+    "agy-stage23-hook-lYxcgt": "Observed deny plus handler exit 1, tool ERROR, no read contents returned."
+  },
+  "validation": {
+    "baselineTests": 127,
+    "finalTests": 149,
+    "newTests": 22,
+    "passed": 149,
+    "failed": 0,
+    "skipped": 0,
+    "build": "PASS",
+    "diffCheck": "PASS",
+    "securityScan": "No real secrets or forbidden artifacts found",
+    "processBindingFailureTest": "PASS"
+  },
+  "gates": {
+    "A": "BLOCKED",
+    "B": "BLOCKED",
+    "C": "BLOCKED",
+    "D": "BLOCKED",
+    "E": "BLOCKED"
+  },
+  "cleanup": {
+    "completedPreviousNativeAgysAndDirectChildrenObservedRemaining": 0,
+    "previousCheckAt": "2026-10-29T21:47:24Z",
+    "hookProbeConfigurationsRemoved": true,
+    "rawHookProbeLogsRemoved": true,
+    "knownNativeAgys": 12,
+    "knownMcpWorkers": 12,
+    "finalKnownPidsOrAgyDirectChildrenRemaining": 0,
+    "privateRuntimeCredentialFilesRemaining": 0
+  }
+}

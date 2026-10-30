@@ -24,6 +24,8 @@ export interface Profile {
   executable?: string;
   provider: 'codex' | 'agy'; policy: Policy; models: string[]; tools: 'client' | 'none';
   timeoutMs: number; startupTimeoutMs: number; maxOutputBytes: number;
+  spawnTimeoutMs?: number; initTimeoutMs?: number; attestationTimeoutMs?: number;
+  shutdownTimeoutMs?: number; approvalTimeoutMs?: number; toolTimeoutMs?: number;
 }
 export interface Client { key: string; workspaces: string[]; profiles: string[] }
 export interface Config {
@@ -37,6 +39,11 @@ export interface Config {
 export function positiveInteger(input: string | undefined, fallback: number, name: string): number {
   const value = input === undefined ? fallback : Number(input);
   if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`${name} must be a positive integer.`);
+  return value;
+}
+export function boundedTimeout(input: string | undefined, fallback: number, maximum: number, name: string): number {
+  const value = positiveInteger(input, fallback, name);
+  if (value > maximum) throw new Error(`${name} must be at most ${maximum}.`);
   return value;
 }
 function json<T>(env: NodeJS.ProcessEnv, name: string, fallback: T): T {
@@ -68,9 +75,15 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
   for (const [id, profile] of Object.entries(profiles)) {
     if (!idPattern.test(id) || !profile || !['codex', 'agy'].includes(profile.provider) || !['read-only', 'supervised', 'write-enabled'].includes(profile.policy)
       || !['client', 'none'].includes(profile.tools) || !Array.isArray(profile.models) || !profile.models.length || !profile.models.every(model => typeof model === 'string' && model.length > 0)) throw new Error('Invalid PROXY_PROFILES entry.');
-    profile.timeoutMs = positiveInteger(profile.timeoutMs?.toString(), timeoutMs, 'profile.timeoutMs');
+    profile.timeoutMs = boundedTimeout(profile.timeoutMs?.toString(), timeoutMs, 3_600_000, 'profile.timeoutMs');
     profile.startupTimeoutMs = positiveInteger(profile.startupTimeoutMs?.toString(), startupTimeoutMs, 'profile.startupTimeoutMs');
     profile.maxOutputBytes = positiveInteger(profile.maxOutputBytes?.toString(), maxOutputBytes, 'profile.maxOutputBytes');
+    profile.spawnTimeoutMs = boundedTimeout(profile.spawnTimeoutMs?.toString() ?? env.CLI_SPAWN_TIMEOUT_MS, 10_000, 60_000, 'profile.spawnTimeoutMs');
+    profile.initTimeoutMs = boundedTimeout(profile.initTimeoutMs?.toString() ?? env.AGY_INIT_TIMEOUT_MS, 30_000, 180_000, 'profile.initTimeoutMs');
+    profile.attestationTimeoutMs = boundedTimeout(profile.attestationTimeoutMs?.toString() ?? env.AGY_ATTESTATION_TIMEOUT_MS, 180_000, 600_000, 'profile.attestationTimeoutMs');
+    profile.shutdownTimeoutMs = boundedTimeout(profile.shutdownTimeoutMs?.toString() ?? env.CLI_SHUTDOWN_TIMEOUT_MS, 5_000, 30_000, 'profile.shutdownTimeoutMs');
+    profile.approvalTimeoutMs = boundedTimeout(profile.approvalTimeoutMs?.toString() ?? env.APPROVAL_TIMEOUT_MS, 300_000, 580_000, 'profile.approvalTimeoutMs');
+    profile.toolTimeoutMs = boundedTimeout(profile.toolTimeoutMs?.toString() ?? env.TOOL_TIMEOUT_MS, 300_000, 580_000, 'profile.toolTimeoutMs');
     if (profile.executable !== undefined && (typeof profile.executable !== 'string' || !profile.executable || /[\r\n\0]/.test(profile.executable))) throw new Error('Profile executable must be a single executable path, without arguments.');
     if (profile.provider === 'agy' && (profile.policy !== 'supervised' || profile.tools !== 'none')) throw new Error('Antigravity supports only supervised policy and tools:none in this adapter.');
   }

@@ -6,6 +6,8 @@ import { authenticationError } from '../utils/cli-error.js';
 import type { OpenAITool, ToolCall } from '../types.js';
 import { cliEnvironment, SERVER_ROOT, validateExecution, type ExecutionContext } from '../config.js';
 import type { AgyWorkspaceRegistry } from '../agy-workspaces.js';
+import type { AgyMcpWorkspaceRegistry } from '../agy-mcp-workspaces.js';
+import type { ExecutionPhase } from './agy-lifecycle.js';
 
 export interface ApprovalRequest {
   action: string;
@@ -14,6 +16,8 @@ export interface ApprovalRequest {
 }
 
 export interface RunOptions {
+  /** Trusted AgentSession identity, never copied from a client header or prompt. */
+  sessionId?: string;
   context?: ExecutionContext;
   approvalTimeoutMs?: number;
   model: string;
@@ -22,9 +26,12 @@ export interface RunOptions {
   tools?: OpenAITool[];
   onApproval?: (request: ApprovalRequest) => Promise<boolean>;
   onToolCall?: (call: ToolCall) => Promise<string>;
+  onPhase?: (phase: ExecutionPhase) => void;
 }
 
 export interface CliRunner {
+  readonly clientToolsReady?: boolean;
+  readonly phasedTimeouts?: boolean;
   diagnose?(): Promise<{ available: boolean; code?: string }>;
   run(options: RunOptions): AsyncIterable<string>;
   listModels?(signal: AbortSignal): Promise<string[]>;
@@ -38,6 +45,8 @@ export interface OutputDecoder {
 }
 
 export interface Command {
+  managesStartup?: boolean;
+  onSpawn?: (pid: number) => void;
   keepStdinOpen?: boolean;
   provider?: 'codex' | 'agy';
   executable: string;
@@ -47,7 +56,16 @@ export interface Command {
   env?: NodeJS.ProcessEnv;
 }
 
+export async function waitForShutdown<T>(closed: Promise<T>, ms = 5000): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  try { return await Promise.race([closed, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new ProxyError('CLI process tree did not close before the shutdown deadline.', 504, 'cli_shutdown_timeout')), ms); })]); }
+  finally { clearTimeout(timer); }
+}
+
 export interface RunnerConfig {
+  /** Trusted, server-side audit sink. MCP events contain correlation hashes, never credentials or arguments. */
+  agyMcpObserver?: (event: Record<string, unknown>) => void;
+  agyMcpRegistry?: AgyMcpWorkspaceRegistry;
   agyRegistry?: AgyWorkspaceRegistry;
   executable?: string;
   // Useful for native Node launchers and deterministic integration fixtures; no shell parsing.
@@ -103,12 +121,20 @@ export abstract class SpawnRunner implements CliRunner {
       child.once('error', error => resolve({ code: null, error }));
       child.once('close', (code, signal) => resolve({ code, ...(signal ? { signal } : {}) }));
     });
-    const abort = () => killProcessTree(child);
-    const startup = setTimeout(() => {
+    child.once('spawn', () => {
+      try { if (child.pid) command.onSpawn?.(child.pid); }
+      catch (cause) {
+        diagnosticError = cause instanceof ProxyError ? cause : new ProxyError('CLI process binding failed.', 502, 'cli_protocol_error');
+        killProcessTree(child); child.stdout.destroy(diagnosticError);
+      }
+    });
+    const abort = () => { killProcessTree(child); child.stdout.destroy(options.signal.reason instanceof Error ? options.signal.reason : new Error('CLI cancelled')); };
+    const startup = command.managesStartup ? undefined : setTimeout(() => {
       diagnosticError = new ProxyError('CLI initialization timed out.', 504, 'cli_timeout');
       killProcessTree(child);
+      child.stdout.destroy(diagnosticError);
     }, options.context?.profile.startupTimeoutMs ?? 30_000);
-    startup.unref();
+    startup?.unref();
     options.signal.addEventListener('abort', abort, { once: true });
     if (options.signal.aborted) abort();
     let stderr = '';
@@ -119,7 +145,7 @@ export abstract class SpawnRunner implements CliRunner {
       stderr = (stderr + stderrFilter.push(text)).slice(-16384);
       if (!diagnosticError) {
         diagnosticError = this.errorFromStderr(stderr);
-        if (diagnosticError) killProcessTree(child);
+        if (diagnosticError) { killProcessTree(child); child.stdout.destroy(diagnosticError); }
       }
     });
     // EPIPE is expected when authentication fails before the CLI consumes stdin.
@@ -153,7 +179,14 @@ export abstract class SpawnRunner implements CliRunner {
           if (clean) yield clean;
         }
       }
-      const result = await outcome;
+      // A process can close stdout before exiting. Cancellation must still
+      // reach finally and its bounded shutdown even if close never arrives.
+      const result = await new Promise<Awaited<typeof outcome>>((resolve, reject) => {
+        const interrupted = () => { options.signal.removeEventListener('abort', interrupted); reject(options.signal.reason ?? new Error('CLI cancelled')); };
+        options.signal.addEventListener('abort', interrupted, { once: true });
+        void outcome.then(value => { options.signal.removeEventListener('abort', interrupted); resolve(value); });
+        if (options.signal.aborted) interrupted();
+      });
       options.signal.throwIfAborted();
       if (diagnosticError) throw diagnosticError;
       const rejectedModel = modelError(`${stderr}\n${result.code !== 0 ? stdoutTail : ''}`);
@@ -184,7 +217,7 @@ export abstract class SpawnRunner implements CliRunner {
       options.signal.removeEventListener('abort', abort);
       if (!finished) {
         killProcessTree(child);
-        await outcome;
+        await waitForShutdown(outcome, options.context?.profile.shutdownTimeoutMs ?? 5000);
       }
     }
   }

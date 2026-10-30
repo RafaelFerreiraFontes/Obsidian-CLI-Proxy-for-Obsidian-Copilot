@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { ProxyError, type ToolCall } from '../types.js';
-import { killProcessTree, type RunOptions, type RunnerConfig } from './base.js';
+import { killProcessTree, waitForShutdown, type RunOptions, type RunnerConfig } from './base.js';
 import { AsyncQueue } from '../utils/async-queue.js';
 import { AnsiFilter } from '../utils/ansi.js';
 import { modelError } from '../utils/model-error.js';
@@ -33,7 +33,7 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
     child.once('close', code => { events.push({ type: 'closed', code }); resolve(); });
     child.once('error', error => { events.push({ type: 'error', error }); resolve(); });
   });
-  const abort = () => killProcessTree(child);
+  const abort = () => { events.push({ type: 'error', error: options.signal.reason instanceof Error ? options.signal.reason : new Error('CLI cancelled') }); killProcessTree(child); };
   options.signal.addEventListener('abort', abort, { once: true });
   if (options.signal.aborted) abort();
   let stderr = '';
@@ -158,6 +158,6 @@ export async function* runCodexAppServer(options: RunOptions, config: RunnerConf
     lines.close();
     child.stdin.end();
     killProcessTree(child);
-    await closed;
+    await waitForShutdown(closed, options.context?.profile.shutdownTimeoutMs ?? 5000);
   }
 }

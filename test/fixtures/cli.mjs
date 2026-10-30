@@ -3,6 +3,7 @@ import { writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import { createInterface } from 'node:readline';
 
 if (process.argv.includes('--help')) {
   process.stdout.write('Fixture CLI help\n');
@@ -26,11 +27,11 @@ let message = transcript.at(-1).content;
 const nativeInit = agy && message.startsWith('native-init:');
 const registered = agy && JSON.parse(readFileSync(join(process.cwd(), '.agents/hooks.json'), 'utf8'))['obsidian-cli-proxy-approval']?.SessionStart;
 if (registered && process.argv[process.argv.indexOf('--add-dir') + 1] !== process.cwd()) throw new Error('Authorized workspace was not mounted through --add-dir');
-const conversationId = registered ? randomUUID() : undefined;
+const conversationId = agy ? randomUUID() : undefined;
 if (nativeInit) {
   message = message.slice('native-init:'.length);
 }
-if (conversationId) {
+if (conversationId && message !== 'phase-wait-init') {
   process.stdout.write(JSON.stringify({ event: 'init', conversation_id: conversationId, init: { cwd: process.cwd(), tools: [] } }) + '\n');
 }
 const hookEnv = nativeInit ? { ...process.env, CLI_PROXY_HOOK_URL: '', CLI_PROXY_HOOK_TOKEN: '' } : process.env;
@@ -41,7 +42,7 @@ if (agy) {
   const hookConfig = JSON.parse(readFileSync(join(hookDirectory, 'hooks.json'), 'utf8'));
   const entry = hookConfig['obsidian-cli-proxy-approval'];
   const ready = message === 'only-pre-invocation' ? entry?.PreInvocation?.[0] : entry?.SessionStart?.[0];
-  if (ready && message !== 'skip-readiness') {
+  if (ready && !['skip-readiness', 'phase-wait-init', 'phase-wait-attestation'].includes(message)) {
     const match = /^(?:"([^"]+)"|([^\s"]+)) ([a-zA-Z0-9.-]+\.mjs) --ready$/.exec(ready.command);
     if (!match) throw new Error('Unexpected readiness command');
     const hook = spawn(match[1] ?? match[2], [match[3], '--ready'], { cwd: hookDirectory, env: hookEnv, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -58,7 +59,9 @@ if (message === 'fail') {
   process.stderr.write('\x1b[31mAuthentication expired: sign in again.\x1b[0m');
   process.exit(7);
 }
-if (message === 'auth-wait') {
+if (['phase-wait-init', 'phase-wait-attestation'].includes(message)) {
+  setInterval(() => {}, 1000);
+} else if (message === 'auth-wait') {
   process.stderr.write('Authentication required. Please visit the URL to log in.');
   setInterval(() => {}, 1000);
 } else if (message.startsWith('sleep:')) {
@@ -71,6 +74,29 @@ if (message === 'auth-wait') {
     let earlyEOF = false;
     process.stdin.on('end', () => { earlyEOF = true; }); process.stdin.resume();
     setTimeout(() => event({ event: 'result', result: { status: 'SUCCESS', response: earlyEOF ? 'closed too early' : 'input kept open' } }), 50);
+  } else if (message === 'mcp-fixture') {
+      // An actual stdio child lets production process-ownership checks run,
+      // rather than impersonating an MCP worker with the fake AGY process.
+      const entry = JSON.parse(readFileSync(join(process.cwd(), '.agents/mcp_config.json'), 'utf8')).mcpServers['obsidian-cli-proxy-tools'];
+      const worker = spawn(entry.command, entry.args, { cwd: entry.cwd, env: process.env, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+      worker.stderr.resume(); worker.stdin.on('error', () => {});
+      const closed = new Promise(resolve => worker.once('close', resolve));
+      const lines = createInterface({ input: worker.stdout }); let nextId = 0; const waiting = new Map();
+      lines.on('line', raw => { const message = JSON.parse(raw); waiting.get(message.id)?.(message); waiting.delete(message.id); });
+      const rpc = (method, params = {}) => new Promise(resolve => { const id = ++nextId; waiting.set(id, resolve); worker.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+      await rpc('initialize', { protocolVersion: '2025-11-25' }); await rpc('tools/list');
+    const command = JSON.parse(readFileSync(join(process.cwd(), '.agents/hooks.json'), 'utf8'))['obsidian-cli-proxy-approval'].PreToolUse[0].hooks[0].command;
+    const match = /^(?:"([^"]+)"|([^\s"]+)) ([a-zA-Z0-9.-]+\.mjs)$/.exec(command);
+    if (!match) throw Error('Unexpected MCP fixture hook');
+    const hook = spawn(match[1] ?? match[2], [match[3]], { cwd: join(process.cwd(), '.agents'), env: hookEnv, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    hook.stdin.end(JSON.stringify({ conversationId, workspacePaths: [process.cwd()], toolCall: { name: 'call_mcp_tool', args: { ServerName: 'obsidian-cli-proxy-tools', ToolName: 'echo_fixture', Arguments: { value: 'fixture call' } } } }));
+    let decision = ''; for await (const part of hook.stdout) decision += part;
+    if (JSON.parse(decision).decision !== 'auto_approve') { worker.stdin.end(); await closed; lines.close(); event({ event: 'result', result: { status: 'SUCCESS', response: 'MCP action denied.' } }); }
+    else {
+      const reply = await rpc('tools/call', { name: 'echo_fixture', arguments: { value: 'fixture call' }, _meta: { 'antigravity.google/conversation_id': conversationId, 'antigravity.google/root_conversation_id': conversationId } });
+      worker.stdin.end(); await closed; lines.close();
+      event({ event: 'result', result: { status: reply.result ? 'SUCCESS' : 'ERROR', response: reply.result?.content?.[0]?.text, error: 'Fixture MCP call rejected' } });
+    }
   } else if (message.startsWith('approval') || message === 'edit-approval') {
     const hookDirectory = join(process.cwd(), '.agents');
     const hookConfig = JSON.parse(readFileSync(join(hookDirectory, 'hooks.json'), 'utf8'));
@@ -86,7 +112,6 @@ if (message === 'auth-wait') {
     const text = decision === 'auto_approve' ? 'Executed approved action.' : 'Action denied.';
     event({ event: 'result', result: { status: 'SUCCESS', response: text } });
   } else {
-  event({ event: 'init', init: { tools: ['private_tool'] } });
   event({ event: 'step_update', step_update: { step_type: 'tool', text_delta: 'DO NOT EXPOSE TOOL OUTPUT' } });
   const text = `\x1b[32mHello 世界 (${model})\x1b[0m`;
   event({ event: 'step_update', step_update: { step_type: 'agent_response', state: 'ACTIVE', text_delta: text.slice(0, 6) } });

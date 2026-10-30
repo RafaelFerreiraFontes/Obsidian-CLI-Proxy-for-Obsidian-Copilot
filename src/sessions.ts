@@ -61,19 +61,21 @@ export class AgentSession {
     return new Promise<T>((resolve, reject) => {
       const event = makeEvent(token);
       this.pending = { token, kind, event, ...(event.type === 'tool' ? { callId: event.call.id } : {}), resolve, reject };
-      this.arm(this.approvalMs, new ProxyError('Pending approval timed out. Submit the original request again.', 410, 'approval_timeout'));
+      this.arm(kind === 'tool' ? this.context?.profile.toolTimeoutMs ?? this.approvalMs : this.approvalMs, new ProxyError('Pending action timed out. Submit the original request again.', 410, kind === 'tool' ? 'tool_timeout' : 'approval_timeout'));
       this.events.push(event);
     });
   }
 
   start(body: ChatCompletionRequest, runner: CliRunner): void {
-    this.armExecution();
+    if (!runner.phasedTimeouts) this.armExecution();
     this.job = (async () => {
       try {
         for await (const text of runner.run({
+          sessionId: this.id,
           model: this.model.slice(this.model.indexOf('/') + 1), prompt: formatPrompt(body.messages),
           signal: this.controller.signal, ...(body.tools ? { tools: body.tools } : {}),
           approvalTimeoutMs: this.approvalMs,
+          onPhase: phase => { if (!this.pending) { if (phase === 'active') this.armExecution(); else clearTimeout(this.timer); } },
           ...(this.context ? { context: this.context } : {}),
           onApproval: request => this.wait<boolean>('approval', token => {
             if (body.tools?.some(tool => tool.function.name === APPROVAL_TOOL)) {
@@ -170,7 +172,7 @@ export class SessionManager {
     } else {
       if (last?.role === 'user' && approvalDecision(messageText(last)) !== undefined) throw new ProxyError('There is no pending approval in this conversation.', 409, 'approval_not_pending');
       if (this.sessions.size >= this.maxSessions) throw new ProxyError('Too many active or pending CLI sessions.', 503, 'session_limit');
-      session = new AgentSession(model, principal, body, context?.profile.timeoutMs ?? this.timeoutMs, this.approvalMs, () => this.sessions.delete(session!.id), context, binding);
+      session = new AgentSession(model, principal, body, context?.profile.timeoutMs ?? this.timeoutMs, Math.min(context?.profile.approvalTimeoutMs ?? this.approvalMs, this.approvalMs), () => this.sessions.delete(session!.id), context, binding);
       this.sessions.set(session.id, session);
       session.start(body, runner);
     }
